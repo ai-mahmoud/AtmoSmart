@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface TeamMember {
   name: string;
   role: string;
@@ -6,13 +8,13 @@ export interface TeamMember {
 
 export interface TechItem {
   name: string;
-  icon: string;
+  icon: React.ReactNode;
   description: string;
 }
 
 export interface DashboardWidget {
   title: string;
   fieldId: number;
-  type: 'line' | 'gauge' | 'status' | 'column' | 'step';
+  type: 'line' | 'spline' | 'column' | 'step' | 'bar';
   description?: string;
 }

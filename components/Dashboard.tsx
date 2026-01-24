@@ -16,8 +16,8 @@ const widgets: DashboardWidget[] = [
   {
     title: 'Air Quality Index (AQI)',
     fieldId: 2,
-    type: 'gauge',
-    description: 'Calculated AQI based on sensor ppm conversion.'
+    type: 'spline', // Changed from gauge to spline for smooth trend visualization
+    description: 'Calculated AQI trend based on sensor ppm conversion.'
   },
   {
     title: 'Ventilation Fan Status',
@@ -28,7 +28,7 @@ const widgets: DashboardWidget[] = [
   {
     title: 'Carbon Filter Status',
     fieldId: 4,
-    type: 'line', // Using line to show history of usage
+    type: 'line',
     description: 'Usage tracking of the active carbon filter element.'
   },
   {
@@ -40,7 +40,7 @@ const widgets: DashboardWidget[] = [
   {
     title: 'Environmental Risk Level',
     fieldId: 6,
-    type: 'line',
+    type: 'step', // Changed to step for discrete states
     description: '0: Safe | 1: Warning | 2: Critical Danger'
   }
 ];
@@ -49,6 +49,7 @@ const Dashboard: React.FC = () => {
   
   const getIframeSrc = (widget: DashboardWidget) => {
     // Common parameters for a clean white look
+    // results=60 shows the last 60 data points
     const commonParams = `bgcolor=%23ffffff&color=%2310b981&dynamic=true&results=60&title=&type=${widget.type}`;
     
     // Customization per type
@@ -58,9 +59,7 @@ const Dashboard: React.FC = () => {
     if (widget.type === 'step') {
         return `${BASE_URL}/${widget.fieldId}?${commonParams}&color=%23f59e0b`; // Amber for status
     }
-    // Note: ThingSpeak chart endpoint creates a chart. 
-    // If a true "Gauge" widget was created on ThingSpeak, it would use /widgets/ID. 
-    // Since we only have field IDs, we visualize the data as charts which is valid for engineering dashboards.
+    
     return `${BASE_URL}/${widget.fieldId}?${commonParams}`;
   };
 
@@ -84,7 +83,7 @@ const Dashboard: React.FC = () => {
                 href={`https://thingspeak.com/channels/${CHANNEL_ID}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
              >
                 <ExternalLink size={16} />
                 View Raw Data on ThingSpeak

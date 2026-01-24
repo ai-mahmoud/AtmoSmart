@@ -1,25 +1,26 @@
 import React from 'react';
 import { TechItem } from '../types';
+import { Cpu, Cloud, Wind, Code } from 'lucide-react';
 
 const techItems: TechItem[] = [
   {
     name: 'ESP32 MCU',
-    icon: 'https://cdn.iconscout.com/icon/free/png-256/free-arduino-logo-icon-download-in-svg-png-gif-file-formats--programming-language-logos-icons-1720092.png?f=webp&w=128',
+    icon: <Cpu size={40} className="text-emerald-600" />,
     description: 'Dual-core microcontroller handling sensor data acquisition and WiFi connectivity.'
   },
   {
     name: 'ThingSpeak',
-    icon: 'https://cdn.mathworks.com/images/responsive/global/shared/bg_thingspeak_logo.svg', 
+    icon: <Cloud size={40} className="text-blue-500" />,
     description: 'IoT analytics platform service for aggregation, visualization, and analysis of live data streams.'
   },
   {
     name: 'MQ135',
-    icon: 'https://img.icons8.com/ios/100/10b981/sensor.png',
+    icon: <Wind size={40} className="text-emerald-500" />,
     description: 'High sensitivity gas sensor for detecting NH3, NOx, alcohol, benzene, smoke and CO2.'
   },
   {
     name: 'React & Tailwind',
-    icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/1200px-React-icon.svg.png',
+    icon: <Code size={40} className="text-indigo-500" />,
     description: 'Modern frontend framework for building a responsive, high-performance monitoring dashboard.'
   }
 ];
@@ -36,8 +37,8 @@ const TechStack: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {techItems.map((item) => (
             <div key={item.name} className="flex flex-col items-center text-center p-6 bg-gray-50 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 border border-transparent hover:border-gray-100">
-              <div className="h-20 w-20 flex items-center justify-center mb-6 bg-white rounded-full shadow-sm p-4">
-                <img src={item.icon} alt={item.name} className="max-h-full max-w-full object-contain" />
+              <div className="h-20 w-20 flex items-center justify-center mb-6 bg-white rounded-full shadow-sm border border-gray-100">
+                {item.icon}
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">{item.name}</h3>
               <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>

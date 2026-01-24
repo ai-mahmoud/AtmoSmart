@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Wifi, Server, Zap, Fan } from 'lucide-react';
+import { Cpu, Server, Zap, Fan } from 'lucide-react';
 
 const SystemOverview: React.FC = () => {
   return (
