@@ -1,0 +1,5 @@
+{
+  "name": "AtmoSmart Dashboard",
+  "description": "Real-time IoT monitoring dashboard for the Solar Powered Air Purifier system.",
+  "requestFramePermissions": []
+}
