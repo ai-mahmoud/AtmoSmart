@@ -13,8 +13,8 @@ const SystemOverview: React.FC = () => {
         </div>
 
         <div className="relative">
-            {/* Connector Line */}
-            <div className="hidden lg:block absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 transform -translate-y-1/2"></div>
+            {/* Connector Line - z-0 to sit behind cards but above section background */}
+            <div className="hidden lg:block absolute top-1/2 left-0 w-full h-1 bg-gray-200 z-0 transform -translate-y-1/2"></div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
                 {/* Step 1 */}
