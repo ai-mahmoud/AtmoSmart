@@ -14,7 +14,10 @@ export interface TechItem {
 
 export interface DashboardWidget {
   title: string;
+  channelId: string;
   fieldId: number;
   type: 'line' | 'spline' | 'column' | 'step' | 'bar';
+  color: string; // Hex code for chart
+  unit: string;
   description?: string;
 }

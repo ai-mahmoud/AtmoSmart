@@ -1,49 +1,73 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle } from 'lucide-react';
+import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, CheckCircle, AlertTriangle } from 'lucide-react';
 import { DashboardWidget } from '../types';
 import { GoogleGenAI, Modality } from "@google/genai";
 
-// Configuration for the ThingSpeak charts
-const CHANNEL_ID = '3234017';
-const BASE_URL = `https://thingspeak.com/channels/${CHANNEL_ID}/charts`;
-const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json`;
+// Channel Configurations
+const CHANNELS = {
+  AQI: '3239969',
+  ENV: '1264164'
+};
+
+const API_URLS = {
+  AQI: `https://api.thingspeak.com/channels/${CHANNELS.AQI}/feeds/last.json`,
+  ENV: `https://api.thingspeak.com/channels/${CHANNELS.ENV}/feeds/last.json`
+};
 
 const widgets: DashboardWidget[] = [
   {
-    title: 'MQ135 Gas Sensor',
+    title: 'Air Quality Index',
+    channelId: CHANNELS.AQI,
     fieldId: 1,
     type: 'line',
-    description: 'Real-time raw voltage output indicating general air quality.'
+    color: '#ef4444', // Red for alert/action
+    unit: 'AQI',
+    description: 'Real-time air quality measurement.'
   },
   {
-    title: 'Air Quality Index (AQI)',
+    title: 'Carbon Filter Load',
+    channelId: CHANNELS.AQI,
     fieldId: 2,
-    type: 'spline',
-    description: 'Calculated AQI trend based on sensor ppm conversion.'
-  },
-  {
-    title: 'Ventilation Fan Status',
-    fieldId: 3,
-    type: 'step',
-    description: 'Binary status: 0 = Off, 1 = On (Active Purification).'
-  },
-  {
-    title: 'Carbon Filter Status',
-    fieldId: 4,
     type: 'line',
-    description: 'Usage tracking of the active carbon filter element.'
+    color: '#64748b', // Slate for hardware status
+    unit: '%',
+    description: 'Saturation level of the active carbon filter.'
   },
   {
     title: 'Pollution Trend',
-    fieldId: 5,
-    type: 'column',
-    description: '-1: Improving | 0: Stable | 1: Worsening'
+    channelId: CHANNELS.AQI,
+    fieldId: 3,
+    type: 'spline',
+    color: '#8b5cf6', // Violet for abstract data
+    unit: 'Idx',
+    description: 'Derivative trend analysis of pollutants.'
   },
   {
-    title: 'Risk Level',
-    fieldId: 6,
-    type: 'step',
-    description: '0: Safe | 1: Warning | 2: Critical Danger'
+    title: 'System Status',
+    channelId: CHANNELS.AQI,
+    fieldId: 4,
+    type: 'line',
+    color: '#10b981', // Emerald for status
+    unit: 'State',
+    description: 'Operational state of the purification unit.'
+  },
+  {
+    title: 'Temperature',
+    channelId: CHANNELS.ENV,
+    fieldId: 1,
+    type: 'spline',
+    color: '#f97316', // Orange for heat
+    unit: '°C',
+    description: 'Ambient temperature sensor data.'
+  },
+  {
+    title: 'Humidity',
+    channelId: CHANNELS.ENV,
+    fieldId: 2,
+    type: 'spline',
+    color: '#0ea5e9', // Blue for water
+    unit: '%',
+    description: 'Relative humidity percentage.'
   }
 ];
 
@@ -69,81 +93,101 @@ async function decodeAudioData(data: Uint8Array, ctx: AudioContext): Promise<Aud
 }
 
 const Dashboard: React.FC = () => {
-  const [lastData, setLastData] = useState<any>(null);
-  const [isSpeaking, setIsSpeaking] = useState<number | null>(null);
+  const [dataAQI, setDataAQI] = useState<any>(null);
+  const [dataEnv, setDataEnv] = useState<any>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+  
+  const [isSpeaking, setIsSpeaking] = useState<string | null>(null); // key: channelId-fieldId
   const [isGlobalSpeaking, setIsGlobalSpeaking] = useState(false);
   const [apiKeyMissing, setApiKeyMissing] = useState(false);
 
-  const fetchLastData = useCallback(async () => {
+  const fetchAllData = useCallback(async () => {
     try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
-      setLastData(data);
+      const [resAQI, resEnv] = await Promise.all([
+        fetch(API_URLS.AQI),
+        fetch(API_URLS.ENV)
+      ]);
+      
+      const jsonAQI = await resAQI.json();
+      const jsonEnv = await resEnv.json();
+
+      setDataAQI(jsonAQI);
+      setDataEnv(jsonEnv);
+      setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error("Error fetching ThingSpeak data:", error);
+      console.error("Error fetching sensor data:", error);
     }
   }, []);
 
   useEffect(() => {
-    fetchLastData();
-    const interval = setInterval(fetchLastData, 15000);
+    fetchAllData();
+    const interval = setInterval(fetchAllData, 15000); // 15s refresh
     return () => clearInterval(interval);
-  }, [fetchLastData]);
+  }, [fetchAllData]);
+
+  const getLiveValue = (widget: DashboardWidget) => {
+    if (widget.channelId === CHANNELS.AQI && dataAQI) {
+      return dataAQI[`field${widget.fieldId}`];
+    }
+    if (widget.channelId === CHANNELS.ENV && dataEnv) {
+      return dataEnv[`field${widget.fieldId}`];
+    }
+    return null;
+  };
 
   const speakStatus = async (widget: DashboardWidget | null) => {
-    // Access the API key injected by Vite
     const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
       setApiKeyMissing(true);
-      // NOTE: Do not include "process.env.API_KEY" literally in the string below as Vite replaces it during build
-      console.error("Gemini API Key is missing in environment variables.");
+      console.error("Gemini API Key is missing.");
       return;
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    if (widget) setIsSpeaking(widget.fieldId);
-    else setIsGlobalSpeaking(true);
+    
+    if (widget) {
+        setIsSpeaking(`${widget.channelId}-${widget.fieldId}`);
+    } else {
+        setIsGlobalSpeaking(true);
+    }
 
     try {
       let message = "";
-      if (widget && lastData) {
-        const value = parseFloat(lastData[`field${widget.fieldId}`]);
-        
-        if (widget.fieldId === 1 || widget.fieldId === 2) {
-          const status = value < 100 ? "Good" : value < 300 ? "Normal" : "Bad";
-          message = `The current ${widget.title} reading is ${value.toFixed(1)}. This is considered ${status}.`;
-        } else if (widget.fieldId === 3) {
-          message = `The Ventilation Fan is currently ${value === 1 ? "On and purifying the air" : "Off"}.`;
-        } else if (widget.fieldId === 5) {
-          const trend = value === -1 ? "Improving" : value === 1 ? "Worsening" : "Stable";
-          message = `The Pollution Trend is currently ${trend}.`;
-        } else if (widget.fieldId === 6) {
-          const risk = value === 0 ? "Safe" : value === 1 ? "Warning" : "Critical Danger";
-          message = `The Environmental Risk Level is ${risk}.`;
+      
+      if (widget) {
+        const val = getLiveValue(widget);
+        if (val !== null) {
+            message = `The ${widget.title} is currently ${val} ${widget.unit}. ${widget.description}`;
         } else {
-          message = `The current value for ${widget.title} is ${value}.`;
+            message = `I cannot currently read the sensor data for ${widget.title}.`;
         }
-      } else if (lastData) {
-        // Global Briefing
-        const aqi = parseFloat(lastData.field2);
-        const fan = parseFloat(lastData.field3);
-        const trend = parseFloat(lastData.field5);
-        message = `System Briefing: Air quality index is ${aqi.toFixed(0)}, which is ${aqi < 100 ? 'good' : 'fair'}. 
-        The purification fan is ${fan === 1 ? 'active' : 'idle'}. The overall trend is ${trend === -1 ? 'improving' : 'stable'}. 
-        AtmoSmart is operating normally.`;
       } else {
-        message = "Connecting to the AtmoSmart sensor network. Please wait a moment.";
+        // Global Briefing Logic
+        if (dataAQI && dataEnv) {
+            const temp = dataEnv.field1;
+            const humidity = dataEnv.field2;
+            const aqi = dataAQI.field1;
+            const status = parseFloat(dataAQI.field4) > 0 ? "Active" : "Idle";
+            
+            message = `System Status Report. 
+            The environment is ${temp} degrees Celsius with ${humidity} percent humidity. 
+            Air Quality Index is ${aqi}. 
+            The purification system is currently ${status}. 
+            All sensors are online.`;
+        } else {
+            message = "System is initializing. Please wait for sensor streams to connect.";
+        }
       }
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say clearly and concisely: ${message}` }] }],
+        contents: [{ parts: [{ text: `Say in a professional engineering tone: ${message}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' },
+              prebuiltVoiceConfig: { voiceName: 'Fenrir' }, // Deeper, more authoritative engineering voice
             },
           },
         },
@@ -170,108 +214,132 @@ const Dashboard: React.FC = () => {
   };
 
   const getIframeSrc = (widget: DashboardWidget) => {
-    const commonParams = `bgcolor=%23ffffff&color=%2310b981&dynamic=true&results=60&title=&type=${widget.type}`;
-    if (widget.type === 'column') return `${BASE_URL}/${widget.fieldId}?${commonParams}&color=%230ea5e9`;
-    if (widget.type === 'step') return `${BASE_URL}/${widget.fieldId}?${commonParams}&color=%23f59e0b`;
-    return `${BASE_URL}/${widget.fieldId}?${commonParams}`;
+    // URL Encode the hex color (replace # with %23)
+    const colorEncoded = widget.color.replace('#', '%23');
+    const baseUrl = `https://thingspeak.com/channels/${widget.channelId}/charts/${widget.fieldId}`;
+    // Dynamic params for cleaner look: no title (we handle it), dynamic scale, specific styling
+    return `${baseUrl}?bgcolor=%23ffffff&color=${colorEncoded}&dynamic=true&results=60&type=${widget.type}&title=&xaxis=Time`;
+  };
+
+  const getIcon = (title: string) => {
+    if (title.includes('Temp')) return <Thermometer size={20} className="text-orange-500" />;
+    if (title.includes('Humidity')) return <Droplets size={20} className="text-blue-500" />;
+    if (title.includes('Air') || title.includes('Gas')) return <Wind size={20} className="text-red-500" />;
+    if (title.includes('Status')) return <CheckCircle size={20} className="text-emerald-500" />;
+    return <Activity size={20} className="text-gray-500" />;
   };
 
   return (
-    <section id="dashboard" className="py-20 bg-gray-100">
+    <section id="dashboard" className="py-16 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
-          <div>
-            <span className="inline-block py-1 px-3 rounded bg-red-100 text-red-600 text-xs font-bold tracking-wider uppercase mb-2">
-              Live Connection
-            </span>
-            <h2 className="text-3xl font-display font-medium text-gray-900">
-              Live IoT Dashboard
-            </h2>
-            <p className="mt-2 text-gray-600">
-              Monitoring Channel ID: <span className="font-mono font-bold">{CHANNEL_ID}</span>
-            </p>
+        
+        {/* Dashboard Header */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse absolute top-0 right-0 -mt-1 -mr-1"></div>
+              <div className="p-3 bg-slate-100 rounded-lg">
+                <Activity className="text-slate-700" size={24} />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-2xl font-display font-semibold text-slate-900">Live Telemetry</h2>
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <span className="font-mono">Sync: {lastUpdated || 'Connecting...'}</span>
+                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                <span className="text-emerald-600 font-medium">System Nominal</span>
+              </div>
+            </div>
           </div>
-          <div className="mt-4 md:mt-0 flex flex-col items-end gap-3">
-             <div className="flex gap-3">
-               <button 
-                  onClick={() => speakStatus(null)}
-                  disabled={isGlobalSpeaking}
-                  className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-white shadow-lg transition-all transform hover:-translate-y-0.5 ${isGlobalSpeaking ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}
-               >
-                  {isGlobalSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
-                  {isGlobalSpeaking ? 'Speaking...' : 'System Briefing'}
-               </button>
-               <a 
-                  href={`https://thingspeak.com/channels/${CHANNEL_ID}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-               >
-                  <ExternalLink size={16} />
-                  Raw Data
-               </a>
-             </div>
+
+          <div className="flex gap-3">
+             <button 
+                onClick={() => speakStatus(null)}
+                disabled={isGlobalSpeaking}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md transition-all hover:scale-105 active:scale-95 ${isGlobalSpeaking ? 'bg-slate-400' : 'bg-gradient-to-r from-slate-800 to-slate-900'}`}
+             >
+                {isGlobalSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
+                <span>Wait-less Briefing</span>
+             </button>
              {apiKeyMissing && (
-                <div className="text-xs text-red-500 font-medium flex items-center gap-1 bg-red-50 px-2 py-1 rounded border border-red-200">
-                  <AlertCircle size={12} />
-                  Voice Assistant Unavailable (Missing API Key)
+                <div title="API Key Missing" className="p-3 bg-red-50 text-red-500 rounded-xl border border-red-100">
+                   <AlertCircle size={24} />
                 </div>
              )}
           </div>
         </div>
 
+        {/* Widgets Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {widgets.map((widget) => (
-            <div key={widget.fieldId} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col">
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide truncate pr-4">
-                  {widget.title}
-                </h3>
-                <div className="flex items-center gap-3">
-                   <button 
-                      onClick={() => speakStatus(widget)}
-                      disabled={isSpeaking === widget.fieldId}
-                      aria-label={`Read ${widget.title} status`}
-                      className={`p-1.5 rounded-lg transition-colors ${isSpeaking === widget.fieldId ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 hover:text-emerald-600 hover:bg-gray-100'}`}
-                   >
-                      {isSpeaking === widget.fieldId ? <Loader2 size={18} className="animate-spin" /> : <Volume2 size={18} />}
-                   </button>
-                   <div className={`w-2 h-2 rounded-full ${lastData ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                </div>
-              </div>
-              
-              <div className="relative w-full h-[260px] bg-white">
-                 <iframe 
-                    width="100%" 
-                    height="100%" 
-                    style={{ border: 0 }} 
-                    src={getIframeSrc(widget)}
-                    title={widget.title}
-                    allowFullScreen
-                  ></iframe>
-              </div>
-
-              <div className="px-6 py-3 bg-white border-t border-gray-100 mt-auto">
-                <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-gray-500 leading-tight">
-                        <span className="font-semibold text-gray-700">Info:</span> {widget.description}
-                    </p>
-                </div>
-                {lastData && (
-                    <div className="text-xs font-mono font-semibold text-emerald-600">
-                        Live: {parseFloat(lastData[`field${widget.fieldId}`] || 0).toFixed(2)}
+          {widgets.map((widget, index) => {
+            const liveValue = getLiveValue(widget);
+            const isWidgetSpeaking = isSpeaking === `${widget.channelId}-${widget.fieldId}`;
+            
+            return (
+              <div key={`${widget.channelId}-${widget.fieldId}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
+                
+                {/* Card Header & Live Data */}
+                <div className="p-6 pb-2">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                        {getIcon(widget.title)}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{widget.title}</h3>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-display font-bold text-slate-900">
+                             {liveValue !== null ? parseFloat(liveValue).toFixed(1) : '--'}
+                          </span>
+                          <span className="text-sm font-medium text-slate-400">{widget.unit}</span>
+                        </div>
+                      </div>
                     </div>
-                )}
+                    
+                    <button 
+                      onClick={() => speakStatus(widget)}
+                      disabled={isWidgetSpeaking}
+                      className={`p-2 rounded-full transition-colors ${isWidgetSpeaking ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-slate-100 text-slate-400'}`}
+                    >
+                       {isWidgetSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Volume2 size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Chart Area */}
+                <div className="flex-grow bg-white relative h-48 w-full border-t border-slate-100">
+                   <iframe 
+                      className="absolute inset-0 w-full h-full pointer-events-none" // pointer-events-none prevents scroll trap in mobile
+                      frameBorder="0"
+                      src={getIframeSrc(widget)}
+                      title={widget.title}
+                    ></iframe>
+                </div>
+
+                {/* Card Footer */}
+                <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                    <span className="text-xs text-slate-500 font-medium truncate max-w-[70%]">
+                      {widget.description}
+                    </span>
+                    <a 
+                      href={`https://thingspeak.com/channels/${widget.channelId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                    >
+                      History <ExternalLink size={10} />
+                    </a>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         
-        <div className="mt-8 flex justify-center">
-             <p className="text-sm text-gray-400 italic flex items-center gap-2">
-                <RefreshCw size={14} className="animate-spin-slow" />
-                Data refreshes automatically every 15 seconds
-             </p>
+        <div className="mt-12 flex justify-center">
+             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-xs text-slate-500">
+                <RefreshCw size={12} className="animate-spin-slow text-emerald-500" />
+                <span>Synchronized with ThingSpeak™ IoT Cloud (15s polling)</span>
+             </div>
         </div>
       </div>
     </section>
