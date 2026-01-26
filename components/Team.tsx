@@ -1,18 +1,28 @@
 import React from 'react';
 import { TeamMember } from '../types';
 
+// Importing images directly ensures Vite bundles them correctly
+// and generates the correct hashed URL for production.
+// This assumes the file structure:
+// root/
+//   components/
+//     Team.tsx
+//   assets/
+//     mahmoud.jpg
+//     malak.jpg
+import mahmoudImg from '../assets/mahmoud.jpg';
+import malakImg from '../assets/malak.jpg';
+
 const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    // Please ensure you have a file named 'mahmoud.jpg' in your assets folder
-    image: '/assets/mahmoud.jpg'
+    image: mahmoudImg
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    // Please ensure you have a file named 'malak.jpg' in your assets folder
-    image: '/assets/malak.jpg'
+    image: malakImg
   },
   {
     name: 'Mariam Ahmed Hany',
@@ -45,7 +55,7 @@ const Team: React.FC = () => {
                     alt={member.name} 
                     onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        // Generates a professional initial avatar if the image file is missing
+                        // Generates a professional initial avatar if the image file is missing or fails to load
                         const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=1f2937&color=9ca3af&size=400`;
                         if (target.src !== fallbackUrl) {
                             target.src = fallbackUrl;
