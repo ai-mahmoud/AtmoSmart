@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, CheckCircle } from 'lucide-react';
 import { DashboardWidget } from '../types';
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -271,7 +271,7 @@ const Dashboard: React.FC = () => {
 
         {/* Widgets Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {widgets.map((widget, index) => {
+          {widgets.map((widget) => {
             const liveValue = getLiveValue(widget);
             const isWidgetSpeaking = isSpeaking === `${widget.channelId}-${widget.fieldId}`;
             
