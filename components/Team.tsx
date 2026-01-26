@@ -1,25 +1,21 @@
 import React from 'react';
 import { TeamMember } from '../types';
-// Ensure relative paths are used for assets
-import mahmoudImg from '../assets/mahmoud.jpg';
-import malakImg from '../assets/malak.jpg';
-import mariamImg from '../assets/mariam.jpg';
 
 const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    image: mahmoudImg
+    image: 'https://atmo-smart.vercel.app/mahmoud.jpg'
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    image: malakImg
+    image: 'https://atmo-smart.vercel.app/malak.jpg'
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Business Operations Lead',
-    image: mariamImg
+    image: 'https://atmo-smart.vercel.app/mariam.jpg'
   }
 ];
 
