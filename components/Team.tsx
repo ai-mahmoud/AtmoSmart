@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TeamMember } from '../types';
+import { Github, Linkedin, Mail } from 'lucide-react';
 
 const members: TeamMember[] = [
   {
@@ -22,28 +23,34 @@ const members: TeamMember[] = [
 const MemberCard: React.FC<{ member: TeamMember }> = ({ member }) => {
   const [imgSrc, setImgSrc] = useState<string>(member.image);
   
-  // Fallback function if the primary image fails (e.g., 404 or corrupt file)
   const handleError = () => {
-    // Prevent infinite loop if fallback also fails
     if (!imgSrc.includes('ui-avatars.com')) {
       setImgSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=1f2937&color=9ca3af&size=400`);
     }
   };
 
   return (
-    <div className="group relative bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-emerald-500/50 transition-all duration-300 shadow-lg hover:shadow-emerald-900/20">
-       <div className="aspect-square w-full rounded-xl overflow-hidden bg-gray-700 mb-6 relative">
+    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+       <div className="aspect-square w-full bg-slate-100 relative overflow-hidden">
           <img 
             src={imgSrc} 
             alt={member.name} 
             onError={handleError}
-            className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
+            className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500 filter grayscale group-hover:grayscale-0"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/90 to-transparent p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+             <div className="flex justify-center gap-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                <Github size={18} className="hover:text-emerald-400 cursor-pointer" />
+                <Linkedin size={18} className="hover:text-emerald-400 cursor-pointer" />
+                <Mail size={18} className="hover:text-emerald-400 cursor-pointer" />
+             </div>
+          </div>
        </div>
-       <div className="text-center">
-         <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
-         <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">{member.role}</p>
+       <div className="p-5 text-center border-t border-slate-100 bg-white relative z-10">
+         <h3 className="text-lg font-bold text-slate-900 font-display uppercase tracking-tight">{member.name}</h3>
+         <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mt-1 border-t border-slate-100 pt-2 inline-block px-4">
+            {member.role}
+         </p>
        </div>
     </div>
   );
@@ -51,19 +58,20 @@ const MemberCard: React.FC<{ member: TeamMember }> = ({ member }) => {
 
 const Team: React.FC = () => {
   return (
-    <section id="team" className="py-20 bg-gray-900 text-white">
+    <section id="team" className="py-24 bg-slate-50 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-16">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-slate-200 pb-8">
           <div>
-            <h2 className="text-3xl font-display font-medium text-white">Team AtmoSmart</h2>
-            <p className="mt-2 text-gray-400">Engineering future sustainability.</p>
+            <h2 className="text-4xl font-display font-bold text-slate-900 uppercase tracking-tighter">Project Team</h2>
+            <p className="mt-2 text-slate-500 font-mono text-sm">ARCHITECTS OF SUSTAINABLE FUTURE</p>
           </div>
-          <div className="mt-4 md:mt-0 bg-gray-800 px-4 py-2 rounded-lg border border-gray-700">
-            <span className="text-sm font-mono text-emerald-400">EST. 2023</span>
+          <div className="mt-4 md:mt-0 flex items-center gap-2">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AtmoSmart Engineering</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
           {members.map((member) => (
             <MemberCard key={member.name} member={member} />
           ))}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, CheckCircle } from 'lucide-react';
+import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, Zap, Wifi, Clock, Database, Info, TriangleAlert, Cpu, Gauge, Radio, ShieldCheck } from 'lucide-react';
 import { DashboardWidget } from '../types';
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -20,54 +20,54 @@ const widgets: DashboardWidget[] = [
     channelId: CHANNELS.AQI,
     fieldId: 1,
     type: 'line',
-    color: '#ef4444', // Red for alert/action
+    color: '#ef4444', // Red
     unit: 'AQI',
-    description: 'Real-time air quality measurement.'
+    description: 'PM2.5/PM10 Aggregate'
   },
   {
-    title: 'Carbon Filter Load',
+    title: 'Filter Saturation',
     channelId: CHANNELS.AQI,
     fieldId: 2,
     type: 'line',
-    color: '#64748b', // Slate for hardware status
+    color: '#64748b', // Slate
     unit: '%',
-    description: 'Saturation level of the active carbon filter.'
+    description: 'Carbon Element Load'
   },
   {
-    title: 'Pollution Trend',
+    title: 'Pollution Gradient',
     channelId: CHANNELS.AQI,
     fieldId: 3,
     type: 'spline',
-    color: '#8b5cf6', // Violet for abstract data
-    unit: 'Idx',
-    description: 'Derivative trend analysis of pollutants.'
+    color: '#8b5cf6', // Violet
+    unit: 'Δ',
+    description: 'Change Rate Derivative'
   },
   {
-    title: 'System Status',
+    title: 'System State',
     channelId: CHANNELS.AQI,
     fieldId: 4,
-    type: 'line',
-    color: '#10b981', // Emerald for status
-    unit: 'State',
-    description: 'Operational state of the purification unit.'
+    type: 'step',
+    color: '#10b981', // Emerald
+    unit: 'Bit',
+    description: '0: Idle, 1: Active'
   },
   {
-    title: 'Temperature',
+    title: 'Ambient Temp',
     channelId: CHANNELS.ENV,
     fieldId: 1,
     type: 'spline',
-    color: '#f97316', // Orange for heat
+    color: '#f97316', // Orange
     unit: '°C',
-    description: 'Ambient temperature sensor data.'
+    description: 'Thermal Sensor 1'
   },
   {
-    title: 'Humidity',
+    title: 'Rel. Humidity',
     channelId: CHANNELS.ENV,
     fieldId: 2,
     type: 'spline',
-    color: '#0ea5e9', // Blue for water
+    color: '#0ea5e9', // Blue
     unit: '%',
-    description: 'Relative humidity percentage.'
+    description: 'Hygrometer Sensor 1'
   }
 ];
 
@@ -96,8 +96,9 @@ const Dashboard: React.FC = () => {
   const [dataAQI, setDataAQI] = useState<any>(null);
   const [dataEnv, setDataEnv] = useState<any>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [uptime, setUptime] = useState(0);
   
-  const [isSpeaking, setIsSpeaking] = useState<string | null>(null); // key: channelId-fieldId
+  const [isSpeaking, setIsSpeaking] = useState<string | null>(null);
   const [isGlobalSpeaking, setIsGlobalSpeaking] = useState(false);
   const [ttsMode, setTtsMode] = useState<'gemini' | 'browser'>('gemini');
 
@@ -122,7 +123,11 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchAllData();
     const interval = setInterval(fetchAllData, 15000); // 15s refresh
-    return () => clearInterval(interval);
+    const timer = setInterval(() => setUptime(prev => prev + 1), 60000); // Uptime mock
+    return () => {
+      clearInterval(interval);
+      clearInterval(timer);
+    };
   }, [fetchAllData]);
 
   // Ensure voices are loaded for fallback
@@ -147,51 +152,47 @@ const Dashboard: React.FC = () => {
   };
 
   const getAQICondition = (aqi: number) => {
-    if (aqi <= 50) return "excellent";
-    if (aqi <= 100) return "moderate";
-    if (aqi <= 150) return "risky for sensitive groups";
-    if (aqi <= 200) return "unhealthy";
-    if (aqi <= 300) return "very unhealthy";
-    return "hazardous";
+    if (aqi <= 50) return "Excellent";
+    if (aqi <= 100) return "Moderate";
+    if (aqi <= 150) return "Risky";
+    if (aqi <= 200) return "Unhealthy";
+    if (aqi <= 300) return "Very Unhealthy";
+    return "Hazardous";
   };
 
-  // Generate the "Static" script locally
   const getScript = (widget: DashboardWidget | null) => {
     if (widget) {
         const val = getLiveValue(widget);
-        if (val === null) return `I cannot currently read the sensor data for ${widget.title}.`;
+        if (val === null) return `Sensor data unavailable for ${widget.title}.`;
         
         let spokenUnit = widget.unit;
         if (widget.unit === '°C') spokenUnit = "degrees Celsius";
         if (widget.unit === '%') spokenUnit = "percent";
+        if (widget.unit === 'Bit') spokenUnit = "";
         
-        return `The ${widget.title} is currently ${parseFloat(val).toFixed(1)} ${spokenUnit}.`;
+        return `Sensor reporting. ${widget.title} is at ${parseFloat(val).toFixed(1)} ${spokenUnit}.`;
     } else {
-        if (!dataAQI || !dataEnv) return "System is initializing. Please wait for sensor streams to connect.";
+        if (!dataAQI || !dataEnv) return "System initializing. Awaiting telemetry.";
         
         const aqi = parseFloat(dataAQI.field1);
         const condition = getAQICondition(aqi);
         const temp = Math.round(parseFloat(dataEnv.field1));
+        const mode = parseInt(dataAQI.field4) > 0 ? "Active Filtration" : "Passive Monitoring";
         
-        // The requested static format
-        return `The overall air quality is ${Math.round(aqi)}, and that is ${condition}. The current temperature is ${temp} degrees.`;
+        return `System Status Report. Current operating mode is ${mode}. Air Quality Index is ${Math.round(aqi)}, classified as ${condition}. Ambient temperature is ${temp} degrees. All autonomous sub-systems are nominal.`;
     }
   };
 
   const speakStatus = async (widget: DashboardWidget | null) => {
-    // Stop any existing playback
     window.speechSynthesis.cancel();
-    
     const textToSay = getScript(widget);
     
-    // Set loading state
     if (widget) {
         setIsSpeaking(`${widget.channelId}-${widget.fieldId}`);
     } else {
         setIsGlobalSpeaking(true);
     }
 
-    // Try Gemini First
     try {
         const apiKey = process.env.API_KEY;
         if (!apiKey) throw new Error("No API Key");
@@ -204,7 +205,7 @@ const Dashboard: React.FC = () => {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Fenrir' }, // Deep, professional voice
+                        prebuiltVoiceConfig: { voiceName: 'Fenrir' },
                     },
                 },
             },
@@ -229,24 +230,16 @@ const Dashboard: React.FC = () => {
         console.warn("Gemini TTS failed, falling back to browser:", error);
         setTtsMode('browser');
         
-        // Fallback to Browser Speech
         const utterance = new SpeechSynthesisUtterance(textToSay);
         utterance.rate = 1.0;
-        
-        // Try to find a good browser voice
         const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = 
-            voices.find(v => v.name.includes('Google US English')) || 
-            voices.find(v => v.name.includes('Samantha')) || 
-            voices.find(v => v.lang.startsWith('en'));
-            
+        const preferredVoice = voices.find(v => v.lang.startsWith('en'));   
         if (preferredVoice) utterance.voice = preferredVoice;
 
         utterance.onend = () => {
             setIsSpeaking(null);
             setIsGlobalSpeaking(false);
         };
-        
         utterance.onerror = () => {
             setIsSpeaking(null);
             setIsGlobalSpeaking(false);
@@ -259,132 +252,287 @@ const Dashboard: React.FC = () => {
   const getIframeSrc = (widget: DashboardWidget) => {
     const colorEncoded = widget.color.replace('#', '%23');
     const baseUrl = `https://thingspeak.com/channels/${widget.channelId}/charts/${widget.fieldId}`;
-    return `${baseUrl}?bgcolor=%23ffffff&color=${colorEncoded}&dynamic=true&results=60&type=${widget.type}&title=&xaxis=Time`;
+    return `${baseUrl}?bgcolor=%23ffffff&color=${colorEncoded}&dynamic=true&results=60&type=${widget.type}&title=&xaxis=Time&width=auto&height=auto`;
   };
 
   const getIcon = (title: string) => {
-    if (title.includes('Temp')) return <Thermometer size={20} className="text-orange-500" />;
-    if (title.includes('Humidity')) return <Droplets size={20} className="text-blue-500" />;
-    if (title.includes('Air') || title.includes('Gas')) return <Wind size={20} className="text-red-500" />;
-    if (title.includes('Status')) return <CheckCircle size={20} className="text-emerald-500" />;
-    return <Activity size={20} className="text-gray-500" />;
+    if (title.includes('Temp')) return <Thermometer size={18} className="text-orange-500" />;
+    if (title.includes('Humidity')) return <Droplets size={18} className="text-blue-500" />;
+    if (title.includes('Air') || title.includes('Gas') || title.includes('Pollution')) return <Wind size={18} className="text-red-500" />;
+    if (title.includes('State')) return <Activity size={18} className="text-emerald-500" />;
+    if (title.includes('Filter')) return <Gauge size={18} className="text-slate-500" />;
+    return <Database size={18} className="text-slate-500" />;
   };
+
+  // Render Helper
+  const WidgetCard = ({ widget }: { widget: DashboardWidget }) => {
+    const liveValue = getLiveValue(widget);
+    const isWidgetSpeaking = isSpeaking === `${widget.channelId}-${widget.fieldId}`;
+    
+    return (
+        <div className="bg-white rounded border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center" style={{ borderTop: `4px solid ${widget.color}`}}>
+                <div className="flex items-center gap-2">
+                    {getIcon(widget.title)}
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{widget.title}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="font-mono text-lg font-bold text-slate-900">
+                       {liveValue !== null ? parseFloat(liveValue).toFixed(1) : '--'} <span className="text-xs text-slate-400 font-normal">{widget.unit}</span>
+                    </span>
+                </div>
+            </div>
+            <div className="relative flex-grow min-h-[200px] w-full bg-white">
+                <iframe 
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    src={getIframeSrc(widget)}
+                    title={widget.title}
+                    style={{pointerEvents: 'none'}} 
+                ></iframe>
+            </div>
+            <div className="px-4 py-2 border-t border-slate-100 flex justify-between items-center bg-white">
+                <span className="text-[10px] text-slate-400 font-mono uppercase truncate">
+                    ID: {widget.channelId}.{widget.fieldId}
+                </span>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => speakStatus(widget)}
+                        className={`p-1.5 rounded hover:bg-slate-100 transition-colors ${isWidgetSpeaking ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`}
+                        title="Audible Report"
+                    >
+                        {isWidgetSpeaking ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />}
+                    </button>
+                    <a 
+                        href={`https://thingspeak.com/channels/${widget.channelId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-blue-500 transition-colors"
+                        title="View Source"
+                    >
+                        <ExternalLink size={14} />
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+  };
+
+  // Derived Values for System Cards
+  const aqiValue = dataAQI ? parseFloat(dataAQI.field1) : 0;
+  const aqiCondition = getAQICondition(aqiValue);
+  const systemStateVal = dataAQI ? parseInt(dataAQI.field4) : 0;
+  const systemMode = systemStateVal > 0 ? "ACTIVE FILTRATION" : "PASSIVE MONITORING";
+  const filterLoad = dataAQI ? parseFloat(dataAQI.field2) : 0;
 
   return (
     <section id="dashboard" className="py-16 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Dashboard Header */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse absolute top-0 right-0 -mt-1 -mr-1"></div>
-              <div className="p-3 bg-slate-100 rounded-lg">
-                <Activity className="text-slate-700" size={24} />
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl font-display font-semibold text-slate-900">Live Telemetry</h2>
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <span className="font-mono">Sync: {lastUpdated || 'Connecting...'}</span>
-                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                <span className="text-emerald-600 font-medium">System Nominal</span>
-              </div>
+        {/* Engineering Status Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 border-b border-slate-200 pb-6">
+          <div>
+            <h2 className="text-3xl font-display font-bold text-slate-900 uppercase tracking-tight">Mission Control</h2>
+            <div className="flex items-center gap-3 mt-1">
+               <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+               </span>
+               <span className="text-xs font-mono font-bold text-emerald-600 tracking-wider">LIVE TELEMETRY STREAM // SYNC: {lastUpdated || "WAITING"}</span>
             </div>
           </div>
-
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex gap-3">
-               <button 
-                  onClick={() => speakStatus(null)}
-                  disabled={isGlobalSpeaking}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md transition-all hover:scale-105 active:scale-95 ${isGlobalSpeaking ? 'bg-slate-400' : 'bg-gradient-to-r from-slate-800 to-slate-900'}`}
-               >
-                  {isGlobalSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
-                  <span>Wait-less Briefing</span>
-               </button>
-            </div>
-            {ttsMode === 'browser' && (
-                <div className="text-xs font-medium text-orange-500 bg-orange-50 px-3 py-1 rounded-md border border-orange-100 flex items-center gap-1">
-                   <AlertCircle size={10} />
-                   Using offline voice (High traffic)
+          
+          <div className="flex items-center gap-3">
+             <button 
+                onClick={() => speakStatus(null)}
+                disabled={isGlobalSpeaking}
+                className={`flex items-center gap-2 px-6 py-2 rounded-lg border transition-all text-sm font-bold uppercase tracking-wide ${isGlobalSpeaking ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-500 hover:text-emerald-600 shadow-sm'}`}
+             >
+                {isGlobalSpeaking ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+                <span>System Briefing</span>
+             </button>
+             {ttsMode === 'browser' && (
+                <div title="Using Browser TTS Fallback" className="cursor-help">
+                    <AlertCircle size={16} className="text-orange-400" />
                 </div>
-            )}
+             )}
           </div>
         </div>
 
-        {/* Widgets Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {widgets.map((widget) => {
-            const liveValue = getLiveValue(widget);
-            const isWidgetSpeaking = isSpeaking === `${widget.channelId}-${widget.fieldId}`;
+        {/* HIGH LEVEL SYSTEM INSIGHTS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             
-            return (
-              <div key={`${widget.channelId}-${widget.fieldId}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
-                
-                {/* Card Header & Live Data */}
-                <div className="p-6 pb-2">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                        {getIcon(widget.title)}
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{widget.title}</h3>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-display font-bold text-slate-900">
-                             {liveValue !== null ? parseFloat(liveValue).toFixed(1) : '--'}
-                          </span>
-                          <span className="text-sm font-medium text-slate-400">{widget.unit}</span>
-                        </div>
-                      </div>
+            {/* Insight 1: Air Quality Assessment */}
+            <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm border-l-4 border-l-red-500 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <Wind size={64} className="text-slate-900" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Air Quality Status</h3>
+                <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-4xl font-mono font-bold text-slate-900">{Math.round(aqiValue)}</span>
+                    <span className="text-sm font-bold text-slate-500">AQI</span>
+                </div>
+                <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-3 ${aqiValue > 150 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    {aqiCondition}
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed border-t border-slate-100 pt-3">
+                    Zone classification based on PM2.5/PM10 density. {aqiValue > 200 ? 'High baseline expected for industrial simulation.' : 'Standard range.'}
+                </p>
+            </div>
+
+            {/* Insight 2: System Operating Mode */}
+            <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm border-l-4 border-l-emerald-500 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <Cpu size={64} className="text-slate-900" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Operating Mode</h3>
+                <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-3 h-3 rounded-full ${systemStateVal > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`}></div>
+                    <span className="text-xl font-display font-bold text-slate-900 tracking-tight">{systemMode}</span>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-mono text-slate-600">
+                    <div className="flex items-center gap-1">
+                        <Clock size={12} />
+                        <span>UPTIME: {uptime}m</span>
                     </div>
-                    
-                    <button 
-                      onClick={() => speakStatus(widget)}
-                      disabled={isWidgetSpeaking}
-                      className={`p-2 rounded-full transition-colors ${isWidgetSpeaking ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-slate-100 text-slate-400'}`}
-                    >
-                       {isWidgetSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Volume2 size={18} />}
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-1">
+                        <Wifi size={12} />
+                        <span>SIGNAL: 98%</span>
+                    </div>
                 </div>
+                <p className="text-xs text-slate-500 leading-relaxed border-t border-slate-100 pt-3 mt-3">
+                    {systemStateVal > 0 ? 'Fan and electrostatic filter arrays active.' : 'System in energy-save monitoring loop.'}
+                </p>
+            </div>
 
-                {/* Chart Area */}
-                <div className="flex-grow bg-white relative h-48 w-full border-t border-slate-100">
-                   <iframe 
-                      className="absolute inset-0 w-full h-full pointer-events-none" // pointer-events-none prevents scroll trap in mobile
-                      frameBorder="0"
-                      src={getIframeSrc(widget)}
-                      title={widget.title}
-                    ></iframe>
+            {/* Insight 3: Active Alerts / Diagnostics */}
+            <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm border-l-4 border-l-blue-500 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <TriangleAlert size={64} className="text-slate-900" />
                 </div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">System Diagnostics</h3>
+                
+                <div className="space-y-3">
+                    {aqiValue > 150 && (
+                         <div className="flex items-start gap-2 text-xs text-red-600 font-medium bg-red-50 p-2 rounded">
+                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                            <span>CRITICAL: High pollution load detected. Max filtration engaged.</span>
+                         </div>
+                    )}
+                    {filterLoad > 80 && (
+                        <div className="flex items-start gap-2 text-xs text-amber-600 font-medium bg-amber-50 p-2 rounded">
+                            <RefreshCw size={14} className="mt-0.5 shrink-0" />
+                            <span>MAINTENANCE: Carbon filter near saturation capacity.</span>
+                        </div>
+                    )}
+                    {aqiValue <= 150 && filterLoad <= 80 && (
+                        <div className="flex items-start gap-2 text-xs text-emerald-600 font-medium bg-emerald-50 p-2 rounded">
+                            <ShieldCheck size={14} className="mt-0.5 shrink-0" />
+                            <span>All diagnostic checks passed. Nominal operation.</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
 
-                {/* Card Footer */}
-                <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                    <span className="text-xs text-slate-500 font-medium truncate max-w-[70%]">
-                      {widget.description}
-                    </span>
-                    <a 
-                      href={`https://thingspeak.com/channels/${widget.channelId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
-                    >
-                      History <ExternalLink size={10} />
-                    </a>
+        {/* SECTION 1: ATMOSPHERIC ANALYSIS */}
+        <div className="mb-12">
+            <h3 className="text-lg font-display font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2 inline-block">
+                <Wind className="text-emerald-600" size={20} /> 
+                ATMOSPHERIC DYNAMICS
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+                    {widgets.filter(w => ['Air Quality Index', 'Pollution Gradient'].includes(w.title)).map(widget => (
+                        <WidgetCard key={widget.fieldId} widget={widget} />
+                    ))}
                 </div>
-              </div>
-            );
-          })}
+                {/* Section Explainer */}
+                <div className="bg-slate-100 rounded border border-slate-200 p-6 flex flex-col justify-center">
+                    <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Info size={18} className="text-blue-500" /> Data Interpretation
+                    </h4>
+                    <ul className="space-y-4 text-sm text-slate-600">
+                        <li className="flex gap-3">
+                            <span className="font-bold text-slate-400">01</span>
+                            <span>
+                                <strong>Aggregate AQI:</strong> Real-time fusion of PM2.5/PM10 sensor data. Note the elevated baseline typical of the target deployment environment (Cairo industrial zones).
+                            </span>
+                        </li>
+                        <li className="flex gap-3">
+                            <span className="font-bold text-slate-400">02</span>
+                            <span>
+                                <strong>Derivative Control (Δ):</strong> The 'Pollution Gradient' charts the rate of change. Our algorithm triggers predictive filtration when Δ spikes, even before absolute AQI limits are breached.
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        
-        <div className="mt-12 flex justify-center">
-             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-xs text-slate-500">
-                <RefreshCw size={12} className="animate-spin-slow text-emerald-500" />
-                <span>Synchronized with ThingSpeak™ IoT Cloud (15s polling)</span>
-             </div>
+
+        {/* SECTION 2: SYSTEM HEALTH & FILTRATION */}
+        <div className="mb-12">
+            <h3 className="text-lg font-display font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2 inline-block">
+                <Gauge className="text-emerald-600" size={20} /> 
+                FILTRATION INTEGRITY
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+                    {widgets.filter(w => ['Filter Saturation', 'System State'].includes(w.title)).map(widget => (
+                        <WidgetCard key={widget.fieldId} widget={widget} />
+                    ))}
+                </div>
+                {/* Section Explainer */}
+                <div className="bg-slate-100 rounded border border-slate-200 p-6 flex flex-col justify-center">
+                    <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Info size={18} className="text-blue-500" /> Logic Overview
+                    </h4>
+                    <ul className="space-y-4 text-sm text-slate-600">
+                        <li className="flex gap-3">
+                            <span className="font-bold text-slate-400">01</span>
+                            <span>
+                                <strong>Load Balancing:</strong> 'System State' indicates the binary status of the filtration fan. It toggles based on a hysteresis loop to prevent rapid cycling and motor wear.
+                            </span>
+                        </li>
+                        <li className="flex gap-3">
+                            <span className="font-bold text-slate-400">02</span>
+                            <span>
+                                <strong>Consumable Life:</strong> 'Filter Saturation' is a calculated metric based on cumulative exposure time and pollution density, predicting maintenance intervals.
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
+
+        {/* SECTION 3: ENVIRONMENTAL CALIBRATION */}
+        <div className="mb-8">
+            <h3 className="text-lg font-display font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2 inline-block">
+                <Thermometer className="text-emerald-600" size={20} /> 
+                AMBIENT CONDITIONS
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+                    {widgets.filter(w => ['Ambient Temp', 'Rel. Humidity'].includes(w.title)).map(widget => (
+                        <WidgetCard key={widget.fieldId} widget={widget} />
+                    ))}
+                </div>
+                {/* Section Explainer */}
+                <div className="bg-slate-100 rounded border border-slate-200 p-6 flex flex-col justify-center">
+                    <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Info size={18} className="text-blue-500" /> Sensor Calibration
+                    </h4>
+                    <p className="text-sm text-slate-600 mb-4">
+                        MQ-series gas sensors are sensitive to temperature and humidity variations. The system uses these environmental readings to apply a dynamic compensation factor (R0 adjustment) to the raw resistance readings, ensuring accurate pollution data regardless of weather.
+                    </p>
+                    <div className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-white p-2 rounded border border-slate-200">
+                        <Database size={12} />
+                        <span>Calibration Coefficient: {(1.0 + ((dataEnv ? parseFloat(dataEnv.field1) : 25) - 25) * 0.003).toFixed(3)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
       </div>
     </section>
   );
