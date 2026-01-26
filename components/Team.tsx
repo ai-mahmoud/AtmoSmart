@@ -1,15 +1,8 @@
 import React from 'react';
 import { TeamMember } from '../types';
 
-// Importing images directly ensures Vite bundles them correctly
-// and generates the correct hashed URL for production.
-// This assumes the file structure:
-// root/
-//   components/
-//     Team.tsx
-//   assets/
-//     mahmoud.jpg
-//     malak.jpg
+// Use relative imports for assets to ensure compatibility with Vite and browser resolution.
+// The '../' traverses up from 'components' to the root where 'assets' is located.
 import mahmoudImg from '../assets/mahmoud.jpg';
 import malakImg from '../assets/malak.jpg';
 
