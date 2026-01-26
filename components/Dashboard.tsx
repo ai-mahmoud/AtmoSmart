@@ -91,10 +91,13 @@ const Dashboard: React.FC = () => {
   }, [fetchLastData]);
 
   const speakStatus = async (widget: DashboardWidget | null) => {
+    // Access the API key injected by Vite
     const apiKey = process.env.API_KEY;
+    
     if (!apiKey) {
       setApiKeyMissing(true);
-      console.error("API Key is missing. Please set process.env.API_KEY.");
+      // NOTE: Do not include "process.env.API_KEY" literally in the string below as Vite replaces it during build
+      console.error("Gemini API Key is missing in environment variables.");
       return;
     }
 
