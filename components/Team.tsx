@@ -1,23 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TeamMember } from '../types';
 
 const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    image: '/mahmoud.jpg'
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    image: '/malak.jpg'
+    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80'
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Business Operations Lead',
-    image: '/mariam.jpg'
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80'
   }
 ];
+
+const MemberCard: React.FC<{ member: TeamMember }> = ({ member }) => {
+  const [imgSrc, setImgSrc] = useState<string>(member.image);
+  
+  // Fallback function if the primary image fails (e.g., 404 or corrupt file)
+  const handleError = () => {
+    // Prevent infinite loop if fallback also fails
+    if (!imgSrc.includes('ui-avatars.com')) {
+      setImgSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=1f2937&color=9ca3af&size=400`);
+    }
+  };
+
+  return (
+    <div className="group relative bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-emerald-500/50 transition-all duration-300 shadow-lg hover:shadow-emerald-900/20">
+       <div className="aspect-square w-full rounded-xl overflow-hidden bg-gray-700 mb-6 relative">
+          <img 
+            src={imgSrc} 
+            alt={member.name} 
+            onError={handleError}
+            className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
+       </div>
+       <div className="text-center">
+         <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
+         <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">{member.role}</p>
+       </div>
+    </div>
+  );
+};
 
 const Team: React.FC = () => {
   return (
@@ -35,28 +65,7 @@ const Team: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
           {members.map((member) => (
-            <div key={member.name} className="group relative bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-emerald-500/50 transition-all duration-300 shadow-lg hover:shadow-emerald-900/20">
-               <div className="aspect-square w-full rounded-xl overflow-hidden bg-gray-700 mb-6 relative">
-                  <img 
-                    src={member.image} 
-                    alt={member.name} 
-                    onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        // Generates a professional initial avatar if the image file is missing or fails to load
-                        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=1f2937&color=9ca3af&size=400`;
-                        if (target.src !== fallbackUrl) {
-                            target.src = fallbackUrl;
-                        }
-                    }}
-                    className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
-               </div>
-               <div className="text-center">
-                 <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
-                 <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">{member.role}</p>
-               </div>
-            </div>
+            <MemberCard key={member.name} member={member} />
           ))}
         </div>
       </div>
