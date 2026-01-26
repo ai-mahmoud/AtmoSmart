@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, RefreshCw, Volume2, Loader2, Play } from 'lucide-react';
+import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle } from 'lucide-react';
 import { DashboardWidget } from '../types';
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -72,6 +72,7 @@ const Dashboard: React.FC = () => {
   const [lastData, setLastData] = useState<any>(null);
   const [isSpeaking, setIsSpeaking] = useState<number | null>(null);
   const [isGlobalSpeaking, setIsGlobalSpeaking] = useState(false);
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
 
   const fetchLastData = useCallback(async () => {
     try {
@@ -90,7 +91,14 @@ const Dashboard: React.FC = () => {
   }, [fetchLastData]);
 
   const speakStatus = async (widget: DashboardWidget | null) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      setApiKeyMissing(true);
+      console.error("API Key is missing. Please set process.env.API_KEY.");
+      return;
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
     if (widget) setIsSpeaking(widget.fieldId);
     else setIsGlobalSpeaking(true);
 
@@ -180,24 +188,32 @@ const Dashboard: React.FC = () => {
               Monitoring Channel ID: <span className="font-mono font-bold">{CHANNEL_ID}</span>
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-3">
-             <button 
-                onClick={() => speakStatus(null)}
-                disabled={isGlobalSpeaking}
-                className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-white shadow-lg transition-all transform hover:-translate-y-0.5 ${isGlobalSpeaking ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}
-             >
-                {isGlobalSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
-                {isGlobalSpeaking ? 'Speaking...' : 'System Briefing'}
-             </button>
-             <a 
-                href={`https://thingspeak.com/channels/${CHANNEL_ID}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-             >
-                <ExternalLink size={16} />
-                Raw Data
-             </a>
+          <div className="mt-4 md:mt-0 flex flex-col items-end gap-3">
+             <div className="flex gap-3">
+               <button 
+                  onClick={() => speakStatus(null)}
+                  disabled={isGlobalSpeaking}
+                  className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-white shadow-lg transition-all transform hover:-translate-y-0.5 ${isGlobalSpeaking ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+               >
+                  {isGlobalSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
+                  {isGlobalSpeaking ? 'Speaking...' : 'System Briefing'}
+               </button>
+               <a 
+                  href={`https://thingspeak.com/channels/${CHANNEL_ID}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+               >
+                  <ExternalLink size={16} />
+                  Raw Data
+               </a>
+             </div>
+             {apiKeyMissing && (
+                <div className="text-xs text-red-500 font-medium flex items-center gap-1 bg-red-50 px-2 py-1 rounded border border-red-200">
+                  <AlertCircle size={12} />
+                  Voice Assistant Unavailable (Missing API Key)
+                </div>
+             )}
           </div>
         </div>
 
