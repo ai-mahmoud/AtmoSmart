@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, CheckCircle } from 'lucide-react';
 import { DashboardWidget } from '../types';
+import { GoogleGenAI, Modality } from "@google/genai";
 
 // Channel Configurations
 const CHANNELS = {
@@ -70,6 +71,27 @@ const widgets: DashboardWidget[] = [
   }
 ];
 
+// Helper for Base64 decoding
+function decodeBase64(base64: string) {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Helper for decoding PCM data from Gemini TTS
+async function decodeAudioData(data: Uint8Array, ctx: AudioContext): Promise<AudioBuffer> {
+  const dataInt16 = new Int16Array(data.buffer);
+  const buffer = ctx.createBuffer(1, dataInt16.length, 24000);
+  const channelData = buffer.getChannelData(0);
+  for (let i = 0; i < dataInt16.length; i++) {
+    channelData[i] = dataInt16[i] / 32768.0;
+  }
+  return buffer;
+}
+
 const Dashboard: React.FC = () => {
   const [dataAQI, setDataAQI] = useState<any>(null);
   const [dataEnv, setDataEnv] = useState<any>(null);
@@ -77,7 +99,7 @@ const Dashboard: React.FC = () => {
   
   const [isSpeaking, setIsSpeaking] = useState<string | null>(null); // key: channelId-fieldId
   const [isGlobalSpeaking, setIsGlobalSpeaking] = useState(false);
-  const [ttsError, setTtsError] = useState<string | null>(null);
+  const [ttsMode, setTtsMode] = useState<'gemini' | 'browser'>('gemini');
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -103,7 +125,7 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [fetchAllData]);
 
-  // Ensure voices are loaded
+  // Ensure voices are loaded for fallback
   useEffect(() => {
     const loadVoices = () => {
       window.speechSynthesis.getVoices();
@@ -133,96 +155,110 @@ const Dashboard: React.FC = () => {
     return "hazardous";
   };
 
-  const speakStatus = (widget: DashboardWidget | null) => {
-    setTtsError(null);
-
-    if (!('speechSynthesis' in window)) {
-      setTtsError("Text-to-speech not supported.");
-      return;
+  // Generate the "Static" script locally
+  const getScript = (widget: DashboardWidget | null) => {
+    if (widget) {
+        const val = getLiveValue(widget);
+        if (val === null) return `I cannot currently read the sensor data for ${widget.title}.`;
+        
+        let spokenUnit = widget.unit;
+        if (widget.unit === '°C') spokenUnit = "degrees Celsius";
+        if (widget.unit === '%') spokenUnit = "percent";
+        
+        return `The ${widget.title} is currently ${parseFloat(val).toFixed(1)} ${spokenUnit}.`;
+    } else {
+        if (!dataAQI || !dataEnv) return "System is initializing. Please wait for sensor streams to connect.";
+        
+        const aqi = parseFloat(dataAQI.field1);
+        const condition = getAQICondition(aqi);
+        const temp = Math.round(parseFloat(dataEnv.field1));
+        
+        // The requested static format
+        return `The overall air quality is ${Math.round(aqi)}, and that is ${condition}. The current temperature is ${temp} degrees.`;
     }
+  };
 
-    // Cancel any current speech
+  const speakStatus = async (widget: DashboardWidget | null) => {
+    // Stop any existing playback
     window.speechSynthesis.cancel();
-
+    
+    const textToSay = getScript(widget);
+    
+    // Set loading state
     if (widget) {
         setIsSpeaking(`${widget.channelId}-${widget.fieldId}`);
     } else {
         setIsGlobalSpeaking(true);
     }
 
-    let message = "";
-    
-    if (widget) {
-      const val = getLiveValue(widget);
-      if (val !== null) {
-          // Clean the unit for speech (e.g., "deg C" instead of "°C" if necessary, but browsers handle symbols okay usually)
-          let spokenUnit = widget.unit;
-          if (widget.unit === '°C') spokenUnit = "degrees Celsius";
-          if (widget.unit === '%') spokenUnit = "percent";
-          
-          message = `The ${widget.title} is currently ${parseFloat(val).toFixed(1)} ${spokenUnit}.`;
-      } else {
-          message = `I cannot currently read the sensor data for ${widget.title}.`;
-      }
-    } else {
-      // Global Briefing Logic
-      if (dataAQI && dataEnv) {
-          const aqi = dataAQI.field1;
-          
-          const aqiNum = parseFloat(aqi);
-          const condition = getAQICondition(aqiNum);
-          
-          // "the overall air quality is [variable], and that is [if condition to choose whether it is good, bad, risky]"
-          message = `The overall air quality is ${Math.round(aqiNum)}, and that is ${condition}.`;
-          
-          // Add environmental context if available
-          if (dataEnv.field1) {
-             message += ` The temperature is ${Math.round(parseFloat(dataEnv.field1))} degrees.`;
-          }
-      } else {
-          message = "System is initializing. Please wait for sensor streams to connect.";
-      }
-    }
+    // Try Gemini First
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) throw new Error("No API Key");
 
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    
-    // Attempt to pick a decent English voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = 
-        voices.find(v => v.name.includes('Google US English')) || 
-        voices.find(v => v.name.includes('Samantha')) || // macOS common
-        voices.find(v => v.lang.startsWith('en-US')) ||
-        voices.find(v => v.lang.startsWith('en'));
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-preview-tts",
+            contents: [{ parts: [{ text: textToSay }] }],
+            config: {
+                responseModalities: [Modality.AUDIO],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: 'Fenrir' }, // Deep, professional voice
+                    },
+                },
+            },
+        });
+
+        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        if (!base64Audio) throw new Error("No audio content");
+
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const buffer = await decodeAudioData(decodeBase64(base64Audio), audioCtx);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.onended = () => {
+            setIsSpeaking(null);
+            setIsGlobalSpeaking(false);
+            setTtsMode('gemini');
+        };
+        source.start();
+
+    } catch (error) {
+        console.warn("Gemini TTS failed, falling back to browser:", error);
+        setTtsMode('browser');
         
-    if (preferredVoice) {
-        utterance.voice = preferredVoice;
+        // Fallback to Browser Speech
+        const utterance = new SpeechSynthesisUtterance(textToSay);
+        utterance.rate = 1.0;
+        
+        // Try to find a good browser voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = 
+            voices.find(v => v.name.includes('Google US English')) || 
+            voices.find(v => v.name.includes('Samantha')) || 
+            voices.find(v => v.lang.startsWith('en'));
+            
+        if (preferredVoice) utterance.voice = preferredVoice;
+
+        utterance.onend = () => {
+            setIsSpeaking(null);
+            setIsGlobalSpeaking(false);
+        };
+        
+        utterance.onerror = () => {
+            setIsSpeaking(null);
+            setIsGlobalSpeaking(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
     }
-
-    utterance.onend = () => {
-      setIsSpeaking(null);
-      setIsGlobalSpeaking(false);
-    };
-
-    utterance.onerror = (e) => {
-      console.error("TTS Error:", e);
-      setIsSpeaking(null);
-      setIsGlobalSpeaking(false);
-      // Only set error if it wasn't a manual cancel or immediate interruption
-      if (e.error !== 'interrupted' && e.error !== 'canceled') {
-          setTtsError("Audio playback error.");
-      }
-    };
-
-    window.speechSynthesis.speak(utterance);
   };
 
   const getIframeSrc = (widget: DashboardWidget) => {
-    // URL Encode the hex color (replace # with %23)
     const colorEncoded = widget.color.replace('#', '%23');
     const baseUrl = `https://thingspeak.com/channels/${widget.channelId}/charts/${widget.fieldId}`;
-    // Dynamic params for cleaner look: no title (we handle it), dynamic scale, specific styling
     return `${baseUrl}?bgcolor=%23ffffff&color=${colorEncoded}&dynamic=true&results=60&type=${widget.type}&title=&xaxis=Time`;
   };
 
@@ -268,10 +304,10 @@ const Dashboard: React.FC = () => {
                   <span>Wait-less Briefing</span>
                </button>
             </div>
-            {ttsError && (
-                <div className="text-xs font-medium text-red-500 bg-red-50 px-3 py-1 rounded-md border border-red-100 flex items-center gap-1">
+            {ttsMode === 'browser' && (
+                <div className="text-xs font-medium text-orange-500 bg-orange-50 px-3 py-1 rounded-md border border-orange-100 flex items-center gap-1">
                    <AlertCircle size={10} />
-                   {ttsError}
+                   Using offline voice (High traffic)
                 </div>
             )}
           </div>
