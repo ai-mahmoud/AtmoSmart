@@ -1,24 +1,25 @@
 import React from 'react';
 import { TeamMember } from '../types';
+// Ensure relative paths are used for assets
+import mahmoudImg from '../assets/mahmoud.jpg';
+import malakImg from '../assets/malak.jpg';
+import mariamImg from '../assets/mariam.jpg';
 
 const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    // Using a professional placeholder image
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+    image: mahmoudImg
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    // Using a professional placeholder image
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+    image: malakImg
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Business Operations Lead',
-    // Using a professional placeholder image
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+    image: mariamImg
   }
 ];
 
