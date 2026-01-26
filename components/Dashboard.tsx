@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, Zap, Wifi, Clock, Database, Info, TriangleAlert, Cpu, Gauge, Radio, ShieldCheck } from 'lucide-react';
+import { ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, Thermometer, Droplets, Wind, Activity, Wifi, Clock, Database, Info, AlertTriangle, Cpu, Gauge, ShieldCheck } from 'lucide-react';
 import { DashboardWidget } from '../types';
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -408,7 +408,7 @@ const Dashboard: React.FC = () => {
             {/* Insight 3: Active Alerts / Diagnostics */}
             <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm border-l-4 border-l-blue-500 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <TriangleAlert size={64} className="text-slate-900" />
+                    <AlertTriangle size={64} className="text-slate-900" />
                 </div>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">System Diagnostics</h3>
                 
