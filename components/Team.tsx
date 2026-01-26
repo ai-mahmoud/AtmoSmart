@@ -5,17 +5,17 @@ const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    image: 'https://atmo-smart.vercel.app/mahmoud.jpg'
+    image: '/mahmoud.jpg'
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    image: 'https://atmo-smart.vercel.app/malak.jpg'
+    image: '/malak.jpg'
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Business Operations Lead',
-    image: 'https://atmo-smart.vercel.app/mariam.jpg'
+    image: '/mariam.jpg'
   }
 ];
 
