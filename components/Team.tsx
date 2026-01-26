@@ -1,27 +1,24 @@
 import React from 'react';
 import { TeamMember } from '../types';
 
-// Use relative imports for assets to ensure compatibility with Vite and browser resolution.
-// The '../' traverses up from 'components' to the root where 'assets' is located.
-import mahmoudImg from '../assets/mahmoud.jpg';
-import malakImg from '../assets/malak.jpg';
-
 const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    image: mahmoudImg
+    // Using a professional placeholder image
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    image: malakImg
+    // Using a professional placeholder image
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Business Operations Lead',
-    // Temporary placeholder until photo is available
-    image: 'https://ui-avatars.com/api/?name=Mariam+Ahmed+Hany&background=10b981&color=fff&size=400'
+    // Using a professional placeholder image
+    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
   }
 ];
 
