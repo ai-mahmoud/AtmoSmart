@@ -3,24 +3,22 @@ import { TeamMember } from '../types';
 
 const members: TeamMember[] = [
   {
-    name: 'Sarah Jenkins',
-    role: 'Lead Systems Engineer',
-    image: 'https://picsum.photos/seed/sarah/200/200'
+    name: 'Mahmoud Hesham Elkholany',
+    role: 'Data Scientist & Web Developer',
+    // Please ensure you have a file named 'mahmoud.jpg' in your assets folder
+    image: '/assets/mahmoud.jpg'
   },
   {
-    name: 'David Chen',
-    role: 'Embedded Software Developer',
-    image: 'https://picsum.photos/seed/david/200/200'
+    name: 'Malak Mohamed El-Atfy',
+    role: 'Embedded Systems & Hardware Engineer',
+    // Please ensure you have a file named 'malak.jpg' in your assets folder
+    image: '/assets/malak.jpg'
   },
   {
-    name: 'Marcus Johnson',
-    role: 'Hardware Specialist',
-    image: 'https://picsum.photos/seed/marcus/200/200'
-  },
-  {
-    name: 'Emily Wong',
-    role: 'Data Analyst',
-    image: 'https://picsum.photos/seed/emily/200/200'
+    name: 'Mariam Ahmed Hany',
+    role: 'Business Operations Lead',
+    // Temporary placeholder until photo is available
+    image: 'https://ui-avatars.com/api/?name=Mariam+Ahmed+Hany&background=10b981&color=fff&size=400'
   }
 ];
 
@@ -38,19 +36,29 @@ const Team: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
           {members.map((member) => (
-            <div key={member.name} className="group relative">
-               <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden bg-gray-800 mb-4">
+            <div key={member.name} className="group relative bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-emerald-500/50 transition-all duration-300 shadow-lg hover:shadow-emerald-900/20">
+               <div className="aspect-square w-full rounded-xl overflow-hidden bg-gray-700 mb-6 relative">
                   <img 
                     src={member.image} 
                     alt={member.name} 
-                    className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500 filter grayscale group-hover:grayscale-0"
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        // Generates a professional initial avatar if the image file is missing
+                        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=1f2937&color=9ca3af&size=400`;
+                        if (target.src !== fallbackUrl) {
+                            target.src = fallbackUrl;
+                        }
+                    }}
+                    className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
                </div>
-               <h3 className="text-xl font-bold text-white">{member.name}</h3>
-               <p className="text-emerald-500 text-sm font-medium uppercase tracking-wider">{member.role}</p>
+               <div className="text-center">
+                 <h3 className="text-xl font-bold text-white mb-1">{member.name}</h3>
+                 <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">{member.role}</p>
+               </div>
             </div>
           ))}
         </div>
