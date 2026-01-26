@@ -41,7 +41,7 @@ const SystemOverview: React.FC = () => {
                         <Cpu size={32} />
                     </div>
                     <h4 className="text-lg font-bold text-gray-900">Processing</h4>
-                    <p className="text-sm text-gray-500 mt-2">ESP32 Microcontroller processes data & logic</p>
+                    <p className="text-sm text-gray-500 mt-2">ESP8266 Microcontroller processes data & logic</p>
                 </div>
 
                 {/* Step 4 */}

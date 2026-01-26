@@ -4,9 +4,9 @@ import { Cpu, Cloud, Wind, Code } from 'lucide-react';
 
 const techItems: TechItem[] = [
   {
-    name: 'ESP32 MCU',
+    name: 'ESP8266 NodeMCU',
     icon: <Cpu size={40} className="text-emerald-600" />,
-    description: 'Dual-core microcontroller handling sensor data acquisition and WiFi connectivity.'
+    description: 'Wi-Fi enabled microcontroller handling sensor data acquisition and cloud connectivity.'
   },
   {
     name: 'ThingSpeak',
