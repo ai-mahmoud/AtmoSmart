@@ -5,17 +5,17 @@ const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Data Scientist & Web Developer',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'
+    image: 'https://ai-mahmoud.github.io/mahmoud.jpg'
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems & Hardware Engineer',
-    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80'
+    image: 'https://ai-mahmoud.github.io/malak.jpg'
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Business Operations Lead',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80'
+    image: 'https://ai-mahmoud.github.io/mariam.jpg'
   }
 ];
 
