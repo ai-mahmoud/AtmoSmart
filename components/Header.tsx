@@ -6,11 +6,10 @@ const Header: React.FC = () => {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Check system preference or localStorage
+    // Check localStorage. Default to light mode (base white) if no preference is saved.
     const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+    if (savedTheme === 'dark') {
       setIsDark(true);
       document.documentElement.classList.add('dark');
     } else {
