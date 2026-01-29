@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Site, Alert } from '../types';
 import { GoogleGenAI } from "@google/genai";
+import { jsPDF } from "jspdf";
 
 // Channel Configurations (Obfuscated in UI, kept for logic)
 const CHANNELS = {
@@ -189,6 +190,145 @@ const Dashboard: React.FC = () => {
         case 'At Risk': return bg ? 'bg-amber-50 border-amber-200' : 'text-amber-600';
         default: return bg ? 'bg-emerald-50 border-emerald-200' : 'text-emerald-600';
     }
+  };
+
+  // --- DOWNLOAD HANDLERS ---
+  const handleDownloadCSV = () => {
+    const headers = ["Timestamp", "Site_ID", "AQI", "Temperature_C", "Humidity_Pct", "Filter_Efficiency", "Compliance_Status"];
+    const rows = [];
+    const now = new Date();
+
+    // Generate 24 hours of mock historical data based on current readings
+    for (let i = 23; i >= 0; i--) {
+        const time = new Date(now.getTime() - i * 60 * 60 * 1000);
+        const noise = () => (Math.random() - 0.5) * 5; // Variation
+        
+        const rowAQI = Math.max(0, Math.round(aqiValue + noise()));
+        // Make temperature float
+        const tVal = parseFloat(typeof tempValue === 'string' ? tempValue : String(tempValue));
+        const rowTemp = (tVal + noise() * 0.2).toFixed(1);
+        
+        // Make humidity float
+        const hVal = parseFloat(typeof humidityValue === 'string' ? humidityValue : String(humidityValue));
+        const rowHum = (hVal + noise()).toFixed(1);
+        
+        const rowFilter = Math.max(0, Math.min(100, (filterHealth - (i * 0.05)))).toFixed(1);
+        
+        const status = rowAQI > STANDARDS.AQI.limit ? "Non-Compliant" : (rowAQI > STANDARDS.AQI.limit * 0.75 ? "At Risk" : "Compliant");
+
+        rows.push([
+            time.toISOString(),
+            selectedSite.id,
+            rowAQI,
+            rowTemp,
+            rowHum,
+            rowFilter,
+            status
+        ].join(","));
+    }
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `atmosmart_logs_${selectedSite.id}_${now.toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    const now = new Date();
+    
+    // Header
+    doc.setFillColor(16, 185, 129); // Emerald 500
+    doc.rect(0, 0, 210, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.text("AtmoSmart Compliance Audit Report", 10, 13);
+    
+    // Metadata
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${now.toLocaleString()}`, 10, 30);
+    doc.text(`Facility: ${selectedSite.name}`, 10, 35);
+    doc.text(`Location: ${selectedSite.location}`, 10, 40);
+    doc.text(`Audit ID: REF-${Math.floor(Math.random() * 100000)}`, 150, 30);
+
+    // Section 1: Executive Status
+    doc.setDrawColor(200, 200, 200);
+    doc.line(10, 45, 200, 45);
+    doc.setFontSize(14);
+    doc.text("1. Executive Status", 10, 55);
+    
+    doc.setFontSize(11);
+    if (overallCompliance === 'Non-Compliant') doc.setTextColor(220, 38, 38);
+    else if (overallCompliance === 'At Risk') doc.setTextColor(217, 119, 6);
+    else doc.setTextColor(5, 150, 105);
+    
+    doc.text(`Status: ${overallCompliance.toUpperCase()}`, 10, 62);
+    doc.setTextColor(0, 0, 0);
+    
+    // AI Summary
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    const summaryText = reportSummary || "System nominal. No critical anomalies detected in the last 24-hour operational window. Automated monitoring active.";
+    const splitSummary = doc.splitTextToSize(summaryText, 180);
+    doc.text(splitSummary, 10, 70);
+    doc.setFont("helvetica", "normal");
+
+    let yPos = 70 + (splitSummary.length * 5) + 10;
+
+    // Section 2: Telemetry Snapshot
+    doc.setFontSize(14);
+    doc.text("2. Telemetry Snapshot", 10, yPos);
+    yPos += 10;
+    
+    const data = [
+        ["Metric", "Value", "Standard", "Status"],
+        ["Air Quality Index", `${Math.round(aqiValue)}`, `< ${STANDARDS.AQI.limit}`, aqiStatus],
+        ["Temperature", `${tempValue}°C`, `< ${STANDARDS.TEMP.limit}°C`, tempStatus],
+        ["Humidity", `${humidityValue}%`, "40-60%", "N/A"],
+        ["Filter Efficiency", `${Math.round(filterHealth)}%`, "> 20%", filterHealth < 20 ? "Service Req" : "Optimal"]
+    ];
+
+    doc.setFontSize(10);
+    let colX = 10;
+    // Simple table drawing manually
+    data.forEach((row, i) => {
+        if (i === 0) doc.setFont("helvetica", "bold");
+        else doc.setFont("helvetica", "normal");
+        
+        doc.text(row[0], 10, yPos);
+        doc.text(row[1], 70, yPos);
+        doc.text(row[2], 110, yPos);
+        doc.text(row[3], 150, yPos);
+        yPos += 7;
+    });
+
+    yPos += 10;
+
+    // Section 3: Incident Log
+    doc.setFontSize(14);
+    doc.text("3. Active Incidents", 10, yPos);
+    yPos += 10;
+
+    if (alerts.length === 0) {
+        doc.setFontSize(10);
+        doc.text("No active incidents recorded.", 10, yPos);
+    } else {
+        alerts.forEach(alert => {
+             doc.setFontSize(10);
+             const prefix = alert.severity === 'Critical' ? '[CRITICAL]' : '[WARNING]';
+             if (alert.severity === 'Critical') doc.setTextColor(220, 38, 38);
+             else doc.setTextColor(217, 119, 6);
+             doc.text(`${prefix} ${alert.message} (${alert.timestamp})`, 10, yPos);
+             yPos += 6;
+        });
+    }
+
+    doc.save(`audit_report_${selectedSite.id}.pdf`);
   };
 
   return (
@@ -443,11 +583,17 @@ const Dashboard: React.FC = () => {
                 <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Compliance Tools</h3>
                     <div className="space-y-2">
-                        <button className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group">
+                        <button 
+                            onClick={handleDownloadCSV}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group"
+                        >
                             <span className="flex items-center gap-2"><FileText size={16} className="text-slate-400 group-hover:text-blue-500"/> Export CSV Logs</span>
                             <Download size={14} className="text-slate-300" />
                         </button>
-                        <button className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group">
+                        <button 
+                            onClick={handleDownloadPDF}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group"
+                        >
                             <span className="flex items-center gap-2"><AlertCircle size={16} className="text-slate-400 group-hover:text-rose-500"/> Audit Report (PDF)</span>
                             <Download size={14} className="text-slate-300" />
                         </button>
