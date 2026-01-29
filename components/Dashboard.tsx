@@ -3,7 +3,7 @@ import {
   Loader2, Play, AlertCircle, Thermometer, Wind, Activity, 
   AlertTriangle, Cpu, ShieldCheck, FileText, Download, 
   Building, Users, Bell, TrendingUp, ChevronDown, CheckCircle2,
-  Briefcase, DollarSign
+  Briefcase
 } from 'lucide-react';
 import { Site, Alert } from '../types';
 import { GoogleGenAI } from "@google/genai";
