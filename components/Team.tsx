@@ -5,17 +5,17 @@ import { Github, Linkedin, Mail } from 'lucide-react';
 const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
-    role: 'Data Scientist & Web Developer',
+    role: 'Lead Solutions Architect',
     image: 'https://ai-mahmoud.github.io/mahmoud.jpg'
   },
   {
     name: 'Malak Mohamed El-Atfy',
-    role: 'Embedded Systems & Hardware Engineer',
+    role: 'Embedded Systems Lead',
     image: 'https://ai-mahmoud.github.io/malak.jpg'
   },
   {
     name: 'Mariam Ahmed Hany',
-    role: 'Business Operations Lead',
+    role: 'Director of Operations',
     image: 'https://ai-mahmoud.github.io/mariam.jpg'
   }
 ];
@@ -62,12 +62,12 @@ const Team: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-slate-200 pb-8">
           <div>
-            <h2 className="text-4xl font-display font-bold text-slate-900 uppercase tracking-tighter">Project Team</h2>
-            <p className="mt-2 text-slate-500 font-mono text-sm">ARCHITECTS OF SUSTAINABLE FUTURE</p>
+            <h2 className="text-4xl font-display font-bold text-slate-900 uppercase tracking-tighter">Executive Board</h2>
+            <p className="mt-2 text-slate-500 font-mono text-sm">ATMOSMART ENGINEERING GROUP</p>
           </div>
           <div className="mt-4 md:mt-0 flex items-center gap-2">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AtmoSmart Engineering</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Global Operations</span>
           </div>
         </div>
 

@@ -5,11 +5,11 @@ const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Project', href: '#about' },
-    { name: 'System', href: '#system' },
-    { name: 'Live Dashboard', href: '#dashboard', primary: true },
-    { name: 'Technology', href: '#tech' },
-    { name: 'Team', href: '#team' },
+    { name: 'Mission', href: '#about' },
+    { name: 'Architecture', href: '#system' },
+    { name: 'Intelligence Platform', href: '#dashboard', primary: true },
+    { name: 'Infrastructure', href: '#tech' },
+    { name: 'Board', href: '#team' },
   ];
 
   return (
@@ -34,8 +34,8 @@ const Header: React.FC = () => {
                 href={link.href}
                 className={`text-sm font-medium transition-colors duration-200 ${
                   link.primary
-                    ? 'bg-emerald-600 text-white px-5 py-2.5 rounded-full hover:bg-emerald-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-                    : 'text-gray-600 hover:text-emerald-600'
+                    ? 'bg-slate-900 text-white px-5 py-2.5 rounded-full hover:bg-slate-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {link.name}
@@ -65,7 +65,7 @@ const Header: React.FC = () => {
                 onClick={() => setIsOpen(false)}
                 className={`block px-3 py-4 rounded-md text-base font-medium text-center ${
                   link.primary
-                    ? 'bg-emerald-50 text-emerald-700'
+                    ? 'bg-slate-900 text-white'
                     : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-50'
                 }`}
               >

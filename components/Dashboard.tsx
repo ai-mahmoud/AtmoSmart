@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Loader2, Play, AlertCircle, Thermometer, Wind, Activity, 
   AlertTriangle, Cpu, ShieldCheck, FileText, Download, 
-  Building, Users, Bell, TrendingUp, ChevronDown 
+  Building, Users, Bell, TrendingUp, ChevronDown, CheckCircle2 
 } from 'lucide-react';
 import { Site, Alert } from '../types';
 import { GoogleGenAI } from "@google/genai";
 
-// Channel Configurations
+// Channel Configurations (Obfuscated in UI, kept for logic)
 const CHANNELS = {
   AQI: '3239969',
   ENV: '1264164'
@@ -27,9 +27,8 @@ const SITES: Site[] = [
 
 // Regulatory Standards Configuration
 const STANDARDS = {
-  AQI: { limit: 100, label: 'EPA Daily Limit', unit: 'AQI' },
-  PM25: { limit: 25, label: 'WHO Guideline', unit: 'µg/m³' },
-  TEMP: { limit: 35, label: 'OSHA Warning', unit: '°C' }
+  AQI: { limit: 100, label: 'ISO 14001 Limit', unit: 'Index' },
+  TEMP: { limit: 35, label: 'OSHA Thermal Limit', unit: '°C' }
 };
 
 const Dashboard: React.FC = () => {
@@ -131,17 +130,17 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const newAlerts: Alert[] = [];
     if (aqiStatus === 'Non-Compliant') {
-        newAlerts.push({ id: 'a1', severity: 'Critical', message: `AQI exceeded ${STANDARDS.AQI.label} (${Math.round(aqiValue)})`, timestamp: new Date().toLocaleTimeString(), metric: 'AQI' });
+        newAlerts.push({ id: 'a1', severity: 'Critical', message: `Air Quality Index exceeded ISO 14001 Standards (${Math.round(aqiValue)})`, timestamp: new Date().toLocaleTimeString(), metric: 'AQI' });
     } else if (aqiStatus === 'At Risk') {
-        newAlerts.push({ id: 'a2', severity: 'Warning', message: `AQI approaching regulatory limit`, timestamp: new Date().toLocaleTimeString(), metric: 'AQI' });
+        newAlerts.push({ id: 'a2', severity: 'Warning', message: `Air Quality approaching regulatory limit`, timestamp: new Date().toLocaleTimeString(), metric: 'AQI' });
     }
     if (tempStatus === 'Non-Compliant') {
-        newAlerts.push({ id: 'a3', severity: 'Critical', message: `Thermal limit exceeded in Sensor Zone 1`, timestamp: new Date().toLocaleTimeString(), metric: 'TEMP' });
+        newAlerts.push({ id: 'a3', severity: 'Critical', message: `Thermal limit exceeded in Zone 1 (Workforce Safety Risk)`, timestamp: new Date().toLocaleTimeString(), metric: 'TEMP' });
     }
     
     // Simulate a system alert occasionally
     if (filterHealth < 20) {
-        newAlerts.push({ id: 'a4', severity: 'Warning', message: 'Filter efficiency degraded < 20%', timestamp: new Date().toLocaleTimeString(), metric: 'MAINT' });
+        newAlerts.push({ id: 'a4', severity: 'Warning', message: 'Filtration efficiency < 20% - Schedule Maintenance', timestamp: new Date().toLocaleTimeString(), metric: 'MAINT' });
     }
 
     setAlerts(newAlerts);
@@ -153,18 +152,20 @@ const Dashboard: React.FC = () => {
     setReportSummary(null);
     try {
         const prompt = `
-            Act as an Environmental Compliance Officer. Analyze this industrial sensor data for site "${selectedSite.name}" (${selectedSite.type}).
+            Act as a Senior Industrial Safety Officer. Analyze this facility telemetry data for site "${selectedSite.name}" (${selectedSite.type}).
             
-            Current Readings:
-            - AQI: ${aqiValue} (Limit: ${STANDARDS.AQI.limit})
-            - Temperature: ${tempValue}°C (Limit: ${STANDARDS.TEMP.limit})
+            Telemetry:
+            - Air Quality Index: ${aqiValue} (Threshold: ${STANDARDS.AQI.limit})
+            - Thermal: ${tempValue}°C (Threshold: ${STANDARDS.TEMP.limit})
             - Humidity: ${humidityValue}%
-            - Filtration Efficiency: ${filterHealth}%
+            - Filter Efficiency: ${filterHealth}%
             
-            Status: ${overallCompliance}
+            Global Compliance Status: ${overallCompliance}
 
-            Generate a concise "Executive Audit Summary" (max 80 words) focusing on regulatory compliance, immediate risks, and one specific maintenance recommendation.
-            Tone: Professional, audit-ready.
+            Generate a "Daily Risk Assessment" (max 80 words).
+            DO NOT mention specific sensor models.
+            DO mention: "Estimated productivity impact", "Regulatory liability", and one specific "Mitigation Action".
+            Tone: Executive, succinct.
         `;
 
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -201,7 +202,7 @@ const Dashboard: React.FC = () => {
                     <Building size={20} />
                 </div>
                 <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Select Facility</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Facility Selector</label>
                     <div className="relative group">
                         <select 
                             className="appearance-none bg-transparent font-display font-bold text-xl text-slate-900 pr-8 cursor-pointer focus:outline-none"
@@ -220,18 +221,18 @@ const Dashboard: React.FC = () => {
 
             <div className="flex items-center gap-6 w-full md:w-auto justify-end">
                 <div className="text-right hidden sm:block">
-                    <span className="block text-xs text-slate-400 font-bold uppercase">Compliance Officer</span>
+                    <span className="block text-xs text-slate-400 font-bold uppercase">Role: Site Admin</span>
                     <span className="block text-sm font-bold text-slate-900 flex items-center gap-2 justify-end">
-                        <Users size={14} /> Admin View
+                        <Users size={14} /> Global View
                     </span>
                 </div>
                 <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
                 <button 
                     onClick={generateAuditReport}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-800 transition-colors shadow-md"
                 >
                     {isGeneratingReport ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
-                    <span>Audit Report</span>
+                    <span>Generate Assessment</span>
                 </button>
             </div>
         </div>
@@ -248,10 +249,10 @@ const Dashboard: React.FC = () => {
                             <ShieldCheck size={32} />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight">Regulatory Compliance Status</h2>
+                            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight">Facility Compliance Status</h2>
                             <p className="text-sm text-slate-600">
-                                Site adheres to {overallCompliance === 'Compliant' ? 'all' : 'most'} environmental protocols. 
-                                <span className="font-mono ml-2 opacity-60">Last Sync: {lastUpdated}</span>
+                                Current adherence to environmental protocols.
+                                <span className="font-mono ml-2 opacity-60">Synced: {lastUpdated}</span>
                             </p>
                         </div>
                     </div>
@@ -260,7 +261,7 @@ const Dashboard: React.FC = () => {
                             {overallCompliance.toUpperCase()}
                         </div>
                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            WHO / EPA / OSHA STANDARDS
+                            ISO 14001 / OSHA STANDARDS
                         </div>
                     </div>
                 </div>
@@ -276,7 +277,7 @@ const Dashboard: React.FC = () => {
                                 </h3>
                                 <div className="mt-2 flex items-baseline gap-2">
                                     <span className="text-4xl font-mono font-bold text-slate-900">{Math.round(aqiValue)}</span>
-                                    <span className="text-sm text-slate-400 font-medium">/ {STANDARDS.AQI.limit} Limit</span>
+                                    <span className="text-sm text-slate-400 font-medium">/ {STANDARDS.AQI.limit} Max</span>
                                 </div>
                             </div>
                             <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${getStatusColor(aqiStatus, true)}`}>
@@ -291,9 +292,9 @@ const Dashboard: React.FC = () => {
                             ></div>
                         </div>
                         <div className="flex justify-between text-[10px] text-slate-400 font-mono uppercase">
-                            <span>0 (Clean)</span>
-                            <span>{STANDARDS.AQI.limit} (Violation)</span>
-                            <span>200 (Hazardous)</span>
+                            <span>Optimal</span>
+                            <span>{STANDARDS.AQI.limit} (Limit)</span>
+                            <span>Hazardous</span>
                         </div>
                     </div>
 
@@ -302,7 +303,7 @@ const Dashboard: React.FC = () => {
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="text-sm font-bold text-slate-500 uppercase flex items-center gap-2">
-                                    <Thermometer size={16} /> Thermal Stress
+                                    <Thermometer size={16} /> Thermal Conditions
                                 </h3>
                                 <div className="mt-2 flex items-baseline gap-2">
                                     <span className="text-4xl font-mono font-bold text-slate-900">{tempValue}°C</span>
@@ -321,9 +322,9 @@ const Dashboard: React.FC = () => {
                             ></div>
                         </div>
                         <div className="flex justify-between text-[10px] text-slate-400 font-mono uppercase">
-                            <span>0°C</span>
+                            <span>Low</span>
                             <span>{STANDARDS.TEMP.limit}°C (Warning)</span>
-                            <span>50°C</span>
+                            <span>Critical</span>
                         </div>
                     </div>
                 </div>
@@ -332,7 +333,7 @@ const Dashboard: React.FC = () => {
                 <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
                     <div className="flex justify-between items-center mb-6">
                          <h3 className="text-sm font-bold text-slate-900 uppercase flex items-center gap-2">
-                            <TrendingUp size={16} className="text-slate-400" /> Compliance Trend (24H)
+                            <TrendingUp size={16} className="text-slate-400" /> 24H Compliance Trend
                         </h3>
                         <div className="flex gap-2">
                             <button className="text-xs font-bold text-white bg-slate-900 px-3 py-1 rounded">24H</button>
@@ -353,7 +354,7 @@ const Dashboard: React.FC = () => {
                                         style={{ height: `${height}%` }}
                                     ></div>
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-slate-900 text-white text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10">
-                                        {Math.round(height)} AQI
+                                        {Math.round(height)}
                                     </div>
                                 </div>
                             );
@@ -375,7 +376,7 @@ const Dashboard: React.FC = () => {
                         <Cpu size={120} />
                     </div>
                     <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Activity size={14} /> AI Contextual Analytics
+                        <Activity size={14} /> Intelligence Engine
                     </h3>
                     
                     {reportSummary ? (
@@ -383,12 +384,15 @@ const Dashboard: React.FC = () => {
                             <p className="text-sm text-slate-300 leading-relaxed font-light mb-4 border-l-2 border-emerald-500 pl-3">
                                 {reportSummary}
                             </p>
-                            <button onClick={() => setReportSummary(null)} className="text-xs text-emerald-400 hover:text-white underline">Refresh Analysis</button>
+                            <div className="flex items-center gap-2 text-xs text-emerald-400">
+                                <CheckCircle2 size={12} />
+                                <span>Analysis Complete</span>
+                            </div>
                         </div>
                     ) : (
                          <div className="text-center py-6">
                             <p className="text-sm text-slate-400 mb-4">
-                                Generate a real-time compliance assessment based on current telemetry.
+                                Run predictive risk analysis on current telemetry.
                             </p>
                             <button 
                                 onClick={generateAuditReport}
@@ -396,7 +400,7 @@ const Dashboard: React.FC = () => {
                                 className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-medium text-sm transition-colors flex items-center justify-center gap-2"
                             >
                                 {isGeneratingReport ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                                Run Executive Analysis
+                                Execute Risk Analysis
                             </button>
                         </div>
                     )}
@@ -406,7 +410,7 @@ const Dashboard: React.FC = () => {
                 <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[300px]">
                     <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
                         <h3 className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
-                            <Bell size={16} className="text-slate-400" /> Active Alerts
+                            <Bell size={16} className="text-slate-400" /> Active Risks
                         </h3>
                         <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{alerts.length}</span>
                     </div>
@@ -414,7 +418,7 @@ const Dashboard: React.FC = () => {
                         {alerts.length === 0 ? (
                              <div className="flex flex-col items-center justify-center h-40 text-slate-400">
                                 <ShieldCheck size={32} className="mb-2 text-slate-300" />
-                                <span className="text-xs uppercase font-bold tracking-wide">System Nominal</span>
+                                <span className="text-xs uppercase font-bold tracking-wide">Facility Nominal</span>
                              </div>
                         ) : (
                             alerts.map((alert) => (
@@ -437,14 +441,14 @@ const Dashboard: React.FC = () => {
 
                 {/* 3. QUICK ACTIONS / EXPORT */}
                 <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Audit Tools</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Compliance Tools</h3>
                     <div className="space-y-2">
                         <button className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group">
-                            <span className="flex items-center gap-2"><FileText size={16} className="text-slate-400 group-hover:text-blue-500"/> Download Daily CSV Log</span>
+                            <span className="flex items-center gap-2"><FileText size={16} className="text-slate-400 group-hover:text-blue-500"/> Export CSV Logs</span>
                             <Download size={14} className="text-slate-300" />
                         </button>
                         <button className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group">
-                            <span className="flex items-center gap-2"><AlertCircle size={16} className="text-slate-400 group-hover:text-rose-500"/> Incident Report (PDF)</span>
+                            <span className="flex items-center gap-2"><AlertCircle size={16} className="text-slate-400 group-hover:text-rose-500"/> Audit Report (PDF)</span>
                             <Download size={14} className="text-slate-300" />
                         </button>
                     </div>
