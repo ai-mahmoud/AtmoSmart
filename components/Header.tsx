@@ -5,10 +5,11 @@ const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Mission', href: '#about' },
+    { name: 'Strategy', href: '#strategy' },
     { name: 'Architecture', href: '#system' },
-    { name: 'Intelligence Platform', href: '#dashboard', primary: true },
+    { name: 'Platform', href: '#dashboard', primary: true },
     { name: 'Infrastructure', href: '#tech' },
+    { name: 'Roadmap', href: '#roadmap' },
     { name: 'Board', href: '#team' },
   ];
 

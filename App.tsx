@@ -1,10 +1,14 @@
 import React from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import About from './components/About';
+import TargetAudience from './components/TargetAudience';
+import StrategicContext from './components/StrategicContext';
+import UseCase from './components/UseCase';
 import SystemOverview from './components/SystemOverview';
 import Dashboard from './components/Dashboard';
 import TechStack from './components/TechStack';
+import Roadmap from './components/Roadmap';
+import BusinessModel from './components/BusinessModel';
 import Team from './components/Team';
 import Footer from './components/Footer';
 import { ArrowUp } from 'lucide-react';
@@ -29,10 +33,14 @@ const App: React.FC = () => {
       <Header />
       <main>
         <Hero />
-        <About />
+        <TargetAudience />
+        <StrategicContext />
+        <UseCase />
         <SystemOverview />
         <Dashboard />
         <TechStack />
+        <Roadmap />
+        <BusinessModel />
         <Team />
       </main>
       <Footer />

@@ -49,8 +49,8 @@ const SystemOverview: React.FC = () => {
                     <div className="w-16 h-16 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-sm group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                         <Cpu size={28} />
                     </div>
-                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Intelligence Engine</h4>
-                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">AI-driven risk analysis & automated mitigation triggering</p>
+                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Decision Intelligence</h4>
+                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">Risk evaluation engine & automated mitigation triggering</p>
                 </div>
 
                 {/* Node 5 */}

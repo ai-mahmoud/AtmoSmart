@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Loader2, Play, AlertCircle, Thermometer, Wind, Activity, 
   AlertTriangle, Cpu, ShieldCheck, FileText, Download, 
-  Building, Users, Bell, TrendingUp, ChevronDown, CheckCircle2 
+  Building, Users, Bell, TrendingUp, ChevronDown, CheckCircle2,
+  Briefcase, DollarSign
 } from 'lucide-react';
 import { Site, Alert } from '../types';
 import { GoogleGenAI } from "@google/genai";
@@ -126,6 +127,10 @@ const Dashboard: React.FC = () => {
   const aqiStatus = getComplianceStatus(aqiValue, STANDARDS.AQI.limit);
   const tempStatus = getComplianceStatus(tempValue, STANDARDS.TEMP.limit);
   const overallCompliance = aqiStatus === 'Non-Compliant' || tempStatus === 'Non-Compliant' ? 'Non-Compliant' : (aqiStatus === 'At Risk' ? 'At Risk' : 'Compliant');
+
+  // Business Impact Logic
+  const productivityImpact = aqiStatus === 'Non-Compliant' ? '-12%' : (aqiStatus === 'At Risk' ? '-7%' : 'Optimal');
+  const sickLeaveRisk = aqiStatus === 'Non-Compliant' ? '+18%' : (aqiStatus === 'At Risk' ? '+5%' : 'Low');
 
   // Dynamic Alert Generation
   useEffect(() => {
@@ -509,13 +514,52 @@ const Dashboard: React.FC = () => {
             {/* RIGHT COLUMN: ACTIONABLE INSIGHTS (4 cols) */}
             <div className="lg:col-span-4 space-y-6">
                 
-                {/* 1. AI EXECUTIVE SUMMARY */}
+                {/* 1. BUSINESS IMPACT ESTIMATE (NEW) */}
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Briefcase size={14} /> Business Impact (Est)
+                    </h3>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="text-slate-600">Productivity Impact</span>
+                                <span className={`font-bold ${productivityImpact === 'Optimal' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {productivityImpact}
+                                </span>
+                            </div>
+                            <div className="w-full bg-slate-100 h-1.5 rounded-full">
+                                <div className={`h-1.5 rounded-full ${productivityImpact === 'Optimal' ? 'bg-emerald-500 w-full' : 'bg-rose-500 w-[70%]'}`}></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="text-slate-600">Sick Leave Risk</span>
+                                <span className={`font-bold ${sickLeaveRisk === 'Low' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                    {sickLeaveRisk}
+                                </span>
+                            </div>
+                            <div className="w-full bg-slate-100 h-1.5 rounded-full">
+                                <div className={`h-1.5 rounded-full ${sickLeaveRisk === 'Low' ? 'bg-emerald-500 w-[10%]' : 'bg-amber-500 w-[40%]'}`}></div>
+                            </div>
+                        </div>
+                        <div>
+                             <div className="flex justify-between text-sm mb-1">
+                                <span className="text-slate-600">Liability Exposure</span>
+                                <span className={`font-bold ${overallCompliance === 'Compliant' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {overallCompliance === 'Compliant' ? 'LOW' : 'HIGH'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. AI EXECUTIVE SUMMARY */}
                 <div className="bg-slate-900 text-white rounded-lg p-6 shadow-md relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5">
                         <Cpu size={120} />
                     </div>
                     <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Activity size={14} /> Intelligence Engine
+                        <Activity size={14} /> Decision Intelligence
                     </h3>
                     
                     {reportSummary ? (
@@ -545,8 +589,8 @@ const Dashboard: React.FC = () => {
                     )}
                 </div>
 
-                {/* 2. ACTIVE ALERTS FEED */}
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[300px]">
+                {/* 3. ACTIVE ALERTS FEED */}
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[250px]">
                     <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
                         <h3 className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
                             <Bell size={16} className="text-slate-400" /> Active Risks
@@ -578,7 +622,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 3. QUICK ACTIONS / EXPORT */}
+                {/* 4. QUICK ACTIONS / EXPORT */}
                 <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Compliance Tools</h3>
                     <div className="space-y-2">

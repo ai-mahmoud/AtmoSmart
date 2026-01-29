@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Zap, ShieldCheck, ArrowRight, BarChart3, Lock } from 'lucide-react';
+import { Activity, Zap, ShieldCheck, ArrowRight, BarChart3, Lock, BrainCircuit } from 'lucide-react';
 
 const Hero: React.FC = () => {
   return (
@@ -24,6 +24,16 @@ const Hero: React.FC = () => {
           <p className="text-xl sm:text-2xl font-light text-slate-500 tracking-wide mb-8 border-y border-slate-100 py-4">
             Turn air quality data into operational resilience, regulatory compliance, and workforce productivity.
           </p>
+
+          <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-8 max-w-2xl mx-auto flex items-start gap-3 text-left">
+            <BrainCircuit className="text-amber-600 shrink-0 mt-1" size={24} />
+            <div>
+              <p className="text-sm font-bold text-amber-800 uppercase tracking-wide">Business Risk Alert</p>
+              <p className="text-slate-700 text-base">
+                Indoor air pollution can reduce workforce cognitive performance by up to <span className="font-bold text-slate-900">15%</span>. AtmoSmart prevents this invisible loss.
+              </p>
+            </div>
+          </div>
           
           <p className="mt-4 max-w-2xl mx-auto text-lg text-slate-600 leading-relaxed">
             AtmoSmart provides a closed-loop ecosystem for automated risk management. 
