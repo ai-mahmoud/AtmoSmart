@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Cloud, Zap, Fan, Database, Share2, Activity, ShieldAlert } from 'lucide-react';
+import { Cpu, Database, Share2, Activity, ShieldAlert } from 'lucide-react';
 
 const SystemOverview: React.FC = () => {
   return (
