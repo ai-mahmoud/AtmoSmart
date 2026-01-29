@@ -294,7 +294,6 @@ const Dashboard: React.FC = () => {
     ];
 
     doc.setFontSize(10);
-    let colX = 10;
     // Simple table drawing manually
     data.forEach((row, i) => {
         if (i === 0) doc.setFont("helvetica", "bold");
