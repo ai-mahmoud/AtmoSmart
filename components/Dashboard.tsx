@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  ExternalLink, RefreshCw, Volume2, Loader2, Play, AlertCircle, 
-  Thermometer, Droplets, Wind, Activity, Wifi, Clock, Database, 
-  Info, AlertTriangle, Cpu, Gauge, ShieldCheck, FileText, 
-  Download, Building, Users, Bell, TrendingUp, ChevronDown 
+  Loader2, Play, AlertCircle, Thermometer, Wind, Activity, 
+  AlertTriangle, Cpu, ShieldCheck, FileText, Download, 
+  Building, Users, Bell, TrendingUp, ChevronDown 
 } from 'lucide-react';
-import { DashboardWidget, Site, Alert } from '../types';
-import { GoogleGenAI, Modality } from "@google/genai";
+import { Site, Alert } from '../types';
+import { GoogleGenAI } from "@google/genai";
 
 // Channel Configurations
 const CHANNELS = {
@@ -39,14 +38,9 @@ const Dashboard: React.FC = () => {
   const [dataAQI, setDataAQI] = useState<any>(null);
   const [dataEnv, setDataEnv] = useState<any>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [uptime, setUptime] = useState(0);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportSummary, setReportSummary] = useState<string | null>(null);
-  
-  // Audio State
-  const [isSpeaking, setIsSpeaking] = useState<string | null>(null);
-  const [isGlobalSpeaking, setIsGlobalSpeaking] = useState(false);
   
   // Mock fallback data generator with noise
   const generateMockData = (siteId: string) => {
@@ -96,8 +90,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchAllData();
     const interval = setInterval(fetchAllData, 15000); 
-    const timer = setInterval(() => setUptime(prev => prev + 1), 60000);
-    return () => { clearInterval(interval); clearInterval(timer); };
+    return () => { clearInterval(interval); };
   }, [fetchAllData]);
 
   // Robust Value Retrieval
@@ -177,7 +170,7 @@ const Dashboard: React.FC = () => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: prompt,
         });
 
         setReportSummary(response.text || "Report generation failed.");
