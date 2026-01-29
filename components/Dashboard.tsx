@@ -131,6 +131,7 @@ const Dashboard: React.FC = () => {
   // Business Impact Logic
   const productivityImpact = aqiStatus === 'Non-Compliant' ? '-12%' : (aqiStatus === 'At Risk' ? '-7%' : 'Optimal');
   const sickLeaveRisk = aqiStatus === 'Non-Compliant' ? '+18%' : (aqiStatus === 'At Risk' ? '+5%' : 'Low');
+  const complianceExposure = overallCompliance === 'Non-Compliant' ? 'HIGH' : (overallCompliance === 'At Risk' ? 'ELEVATED' : 'LOW');
 
   // Dynamic Alert Generation
   useEffect(() => {
@@ -191,9 +192,9 @@ const Dashboard: React.FC = () => {
   // Helper colors
   const getStatusColor = (status: string, bg = false) => {
     switch (status) {
-        case 'Non-Compliant': return bg ? 'bg-rose-50 border-rose-200' : 'text-rose-600';
-        case 'At Risk': return bg ? 'bg-amber-50 border-amber-200' : 'text-amber-600';
-        default: return bg ? 'bg-emerald-50 border-emerald-200' : 'text-emerald-600';
+        case 'Non-Compliant': return bg ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50' : 'text-rose-600 dark:text-rose-400';
+        case 'At Risk': return bg ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/50' : 'text-amber-600 dark:text-amber-400';
+        default: return bg ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50' : 'text-emerald-600 dark:text-emerald-400';
     }
   };
 
@@ -336,29 +337,29 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <section id="dashboard" className="bg-slate-50 min-h-screen py-8">
+    <section id="dashboard" className="bg-slate-50 dark:bg-slate-900 min-h-screen py-8 border-y border-slate-200 dark:border-slate-800">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* ENTERPRISE HEADER */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4 w-full md:w-auto">
-                <div className="bg-slate-900 text-white p-2 rounded">
+                <div className="bg-slate-900 dark:bg-slate-800 text-white p-2 rounded">
                     <Building size={20} />
                 </div>
                 <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Facility Selector</label>
+                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Facility Selector</label>
                     <div className="relative group">
                         <select 
-                            className="appearance-none bg-transparent font-display font-bold text-xl text-slate-900 pr-8 cursor-pointer focus:outline-none"
+                            className="appearance-none bg-transparent font-display font-bold text-xl text-slate-900 dark:text-white pr-8 cursor-pointer focus:outline-none"
                             value={selectedSite.id}
                             onChange={(e) => setSelectedSite(SITES.find(s => s.id === e.target.value) || SITES[0])}
                         >
-                            {SITES.map(site => <option key={site.id} value={site.id}>{site.name}</option>)}
+                            {SITES.map(site => <option key={site.id} value={site.id} className="text-slate-900">{site.name}</option>)}
                         </select>
                         <ChevronDown size={16} className="absolute right-0 top-1.5 text-slate-400 pointer-events-none" />
                     </div>
                 </div>
-                <span className={`ml-2 px-2 py-0.5 text-xs font-bold rounded uppercase ${selectedSite.status === 'Online' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                <span className={`ml-2 px-2 py-0.5 text-xs font-bold rounded uppercase ${selectedSite.status === 'Online' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
                     {selectedSite.status}
                 </span>
             </div>
@@ -366,14 +367,14 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center gap-6 w-full md:w-auto justify-end">
                 <div className="text-right hidden sm:block">
                     <span className="block text-xs text-slate-400 font-bold uppercase">Role: Site Admin</span>
-                    <span className="block text-sm font-bold text-slate-900 flex items-center gap-2 justify-end">
+                    <span className="block text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
                         <Users size={14} /> Global View
                     </span>
                 </div>
-                <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
                 <button 
                     onClick={generateAuditReport}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-800 transition-colors shadow-md"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white text-sm font-medium rounded hover:bg-slate-800 dark:hover:bg-emerald-500 transition-colors shadow-md"
                 >
                     {isGeneratingReport ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
                     <span>Generate Assessment</span>
@@ -387,14 +388,14 @@ const Dashboard: React.FC = () => {
             <div className="lg:col-span-8 space-y-6">
                 
                 {/* 1. COMPLIANCE STATUS BANNER */}
-                <div className={`rounded-lg border-l-4 p-6 shadow-sm bg-white flex flex-col md:flex-row justify-between items-center gap-6 ${getStatusColor(overallCompliance, true)} ${overallCompliance === 'Non-Compliant' ? 'border-l-rose-500' : overallCompliance === 'At Risk' ? 'border-l-amber-500' : 'border-l-emerald-500'}`}>
+                <div className={`rounded-lg border-l-4 p-6 shadow-sm bg-white dark:bg-slate-950 flex flex-col md:flex-row justify-between items-center gap-6 ${getStatusColor(overallCompliance, true)} ${overallCompliance === 'Non-Compliant' ? 'border-l-rose-500' : overallCompliance === 'At Risk' ? 'border-l-amber-500' : 'border-l-emerald-500'}`}>
                     <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full ${overallCompliance === 'Non-Compliant' ? 'bg-rose-100 text-rose-600' : overallCompliance === 'At Risk' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                        <div className={`p-3 rounded-full ${overallCompliance === 'Non-Compliant' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' : overallCompliance === 'At Risk' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'}`}>
                             <ShieldCheck size={32} />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight">Facility Compliance Status</h2>
-                            <p className="text-sm text-slate-600">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tight">Facility Compliance Status</h2>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
                                 Current adherence to environmental protocols.
                                 <span className="font-mono ml-2 opacity-60">Synced: {lastUpdated}</span>
                             </p>
@@ -404,7 +405,7 @@ const Dashboard: React.FC = () => {
                         <div className={`text-3xl font-display font-bold ${getStatusColor(overallCompliance)}`}>
                             {overallCompliance.toUpperCase()}
                         </div>
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
                             ISO 14001 / OSHA STANDARDS
                         </div>
                     </div>
@@ -413,14 +414,14 @@ const Dashboard: React.FC = () => {
                 {/* 2. REGULATORY THRESHOLDS GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* AQI CARD */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-6 relative overflow-hidden">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-500 uppercase flex items-center gap-2">
+                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
                                     <Wind size={16} /> Air Quality Index
                                 </h3>
                                 <div className="mt-2 flex items-baseline gap-2">
-                                    <span className="text-4xl font-mono font-bold text-slate-900">{Math.round(aqiValue)}</span>
+                                    <span className="text-4xl font-mono font-bold text-slate-900 dark:text-white">{Math.round(aqiValue)}</span>
                                     <span className="text-sm text-slate-400 font-medium">/ {STANDARDS.AQI.limit} Max</span>
                                 </div>
                             </div>
@@ -429,13 +430,13 @@ const Dashboard: React.FC = () => {
                             </span>
                         </div>
                         {/* Threshold Bar */}
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-2">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
                             <div 
                                 className={`h-full rounded-full transition-all duration-1000 ${aqiValue > 100 ? 'bg-rose-500' : aqiValue > 75 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
                                 style={{ width: `${Math.min((aqiValue / 150) * 100, 100)}%` }}
                             ></div>
                         </div>
-                        <div className="flex justify-between text-[10px] text-slate-400 font-mono uppercase">
+                        <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono uppercase">
                             <span>Optimal</span>
                             <span>{STANDARDS.AQI.limit} (Limit)</span>
                             <span>Hazardous</span>
@@ -443,14 +444,14 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* THERMAL CARD */}
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-6 relative overflow-hidden">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-500 uppercase flex items-center gap-2">
+                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
                                     <Thermometer size={16} /> Thermal Conditions
                                 </h3>
                                 <div className="mt-2 flex items-baseline gap-2">
-                                    <span className="text-4xl font-mono font-bold text-slate-900">{tempValue}°C</span>
+                                    <span className="text-4xl font-mono font-bold text-slate-900 dark:text-white">{tempValue}°C</span>
                                     <span className="text-sm text-slate-400 font-medium">/ {STANDARDS.TEMP.limit}°C Max</span>
                                 </div>
                             </div>
@@ -459,13 +460,13 @@ const Dashboard: React.FC = () => {
                             </span>
                         </div>
                         {/* Threshold Bar */}
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-2">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
                             <div 
                                 className={`h-full rounded-full transition-all duration-1000 ${tempValue > 35 ? 'bg-rose-500' : tempValue > 30 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
                                 style={{ width: `${Math.min((tempValue / 50) * 100, 100)}%` }}
                             ></div>
                         </div>
-                        <div className="flex justify-between text-[10px] text-slate-400 font-mono uppercase">
+                        <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono uppercase">
                             <span>Low</span>
                             <span>{STANDARDS.TEMP.limit}°C (Warning)</span>
                             <span>Critical</span>
@@ -474,19 +475,19 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* 3. HISTORICAL TRENDS (Mocked Chart UI) */}
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-6">
                     <div className="flex justify-between items-center mb-6">
-                         <h3 className="text-sm font-bold text-slate-900 uppercase flex items-center gap-2">
+                         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2">
                             <TrendingUp size={16} className="text-slate-400" /> 24H Compliance Trend
                         </h3>
                         <div className="flex gap-2">
-                            <button className="text-xs font-bold text-white bg-slate-900 px-3 py-1 rounded">24H</button>
-                            <button className="text-xs font-bold text-slate-500 hover:bg-slate-100 px-3 py-1 rounded">7D</button>
-                            <button className="text-xs font-bold text-slate-500 hover:bg-slate-100 px-3 py-1 rounded">30D</button>
+                            <button className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-3 py-1 rounded">24H</button>
+                            <button className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1 rounded">7D</button>
+                            <button className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1 rounded">30D</button>
                         </div>
                     </div>
                     {/* Visual Placeholder for Chart */}
-                    <div className="h-64 w-full bg-slate-50 rounded border border-slate-100 relative overflow-hidden flex items-end px-4 pt-4 gap-1">
+                    <div className="h-64 w-full bg-slate-50 dark:bg-slate-900 rounded border border-slate-100 dark:border-slate-800 relative overflow-hidden flex items-end px-4 pt-4 gap-1">
                         {/* Generating fake bars */}
                         {Array.from({ length: 24 }).map((_, i) => {
                             const height = 20 + Math.random() * 60;
@@ -494,18 +495,18 @@ const Dashboard: React.FC = () => {
                             return (
                                 <div key={i} className="flex-1 flex flex-col justify-end group cursor-pointer relative">
                                     <div 
-                                        className={`w-full rounded-t ${isHigh ? 'bg-rose-400' : 'bg-emerald-400'} opacity-80 group-hover:opacity-100 transition-all`}
+                                        className={`w-full rounded-t ${isHigh ? 'bg-rose-400 dark:bg-rose-500' : 'bg-emerald-400 dark:bg-emerald-500'} opacity-80 group-hover:opacity-100 transition-all`}
                                         style={{ height: `${height}%` }}
                                     ></div>
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-slate-900 text-white text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10">
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10">
                                         {Math.round(height)}
                                     </div>
                                 </div>
                             );
                         })}
                         {/* Threshold Line */}
-                        <div className="absolute top-[30%] left-0 w-full border-t-2 border-dashed border-rose-300 pointer-events-none">
-                            <span className="absolute right-2 -top-3 text-[10px] font-bold text-rose-500 bg-white px-1">Limit (100)</span>
+                        <div className="absolute top-[30%] left-0 w-full border-t-2 border-dashed border-rose-300 dark:border-rose-700 pointer-events-none">
+                            <span className="absolute right-2 -top-3 text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-white dark:bg-slate-900 px-1">Limit (100)</span>
                         </div>
                     </div>
                 </div>
@@ -515,46 +516,49 @@ const Dashboard: React.FC = () => {
             <div className="lg:col-span-4 space-y-6">
                 
                 {/* 1. BUSINESS IMPACT ESTIMATE (NEW) */}
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+                    <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Briefcase size={14} /> Business Impact (Est)
                     </h3>
                     <div className="space-y-4">
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-slate-600">Productivity Impact</span>
-                                <span className={`font-bold ${productivityImpact === 'Optimal' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                <span className="text-slate-600 dark:text-slate-400">Productivity Impact</span>
+                                <span className={`font-bold ${productivityImpact === 'Optimal' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                     {productivityImpact}
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-100 h-1.5 rounded-full">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full">
                                 <div className={`h-1.5 rounded-full ${productivityImpact === 'Optimal' ? 'bg-emerald-500 w-full' : 'bg-rose-500 w-[70%]'}`}></div>
                             </div>
                         </div>
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-slate-600">Sick Leave Risk</span>
-                                <span className={`font-bold ${sickLeaveRisk === 'Low' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                <span className="text-slate-600 dark:text-slate-400">Sick Leave Risk</span>
+                                <span className={`font-bold ${sickLeaveRisk === 'Low' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                                     {sickLeaveRisk}
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-100 h-1.5 rounded-full">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full">
                                 <div className={`h-1.5 rounded-full ${sickLeaveRisk === 'Low' ? 'bg-emerald-500 w-[10%]' : 'bg-amber-500 w-[40%]'}`}></div>
                             </div>
                         </div>
                         <div>
                              <div className="flex justify-between text-sm mb-1">
-                                <span className="text-slate-600">Liability Exposure</span>
-                                <span className={`font-bold ${overallCompliance === 'Compliant' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {overallCompliance === 'Compliant' ? 'LOW' : 'HIGH'}
+                                <span className="text-slate-600 dark:text-slate-400">Compliance Exposure</span>
+                                <span className={`font-bold ${overallCompliance === 'Compliant' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                    {complianceExposure}
                                 </span>
+                            </div>
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full">
+                                <div className={`h-1.5 rounded-full ${complianceExposure === 'LOW' ? 'bg-emerald-500 w-[5%]' : (complianceExposure === 'ELEVATED' ? 'bg-amber-500 w-[50%]' : 'bg-rose-600 w-[90%]')}`}></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* 2. AI EXECUTIVE SUMMARY */}
-                <div className="bg-slate-900 text-white rounded-lg p-6 shadow-md relative overflow-hidden">
+                <div className="bg-slate-900 dark:bg-black text-white rounded-lg p-6 shadow-md relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5">
                         <Cpu size={120} />
                     </div>
@@ -590,12 +594,12 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* 3. ACTIVE ALERTS FEED */}
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[250px]">
-                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
-                        <h3 className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-[250px]">
+                    <div className="bg-slate-50 dark:bg-slate-900 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-2">
                             <Bell size={16} className="text-slate-400" /> Active Risks
                         </h3>
-                        <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{alerts.length}</span>
+                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full text-xs font-bold">{alerts.length}</span>
                     </div>
                     <div className="overflow-y-auto p-0">
                         {alerts.length === 0 ? (
@@ -605,15 +609,15 @@ const Dashboard: React.FC = () => {
                              </div>
                         ) : (
                             alerts.map((alert) => (
-                                <div key={alert.id} className="p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors flex gap-3">
+                                <div key={alert.id} className="p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex gap-3">
                                     <div className={`mt-1 ${alert.severity === 'Critical' ? 'text-rose-500' : 'text-amber-500'}`}>
                                         <AlertTriangle size={16} />
                                     </div>
                                     <div>
-                                        <p className={`text-xs font-bold uppercase mb-1 ${alert.severity === 'Critical' ? 'text-rose-600' : 'text-amber-600'}`}>
+                                        <p className={`text-xs font-bold uppercase mb-1 ${alert.severity === 'Critical' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
                                             {alert.severity} • {alert.metric}
                                         </p>
-                                        <p className="text-sm text-slate-700 font-medium leading-tight mb-1">{alert.message}</p>
+                                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-tight mb-1">{alert.message}</p>
                                         <p className="text-[10px] text-slate-400 font-mono">{alert.timestamp}</p>
                                     </div>
                                 </div>
@@ -623,21 +627,21 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* 4. QUICK ACTIONS / EXPORT */}
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
+                <div className="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm p-4">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Compliance Tools</h3>
                     <div className="space-y-2">
                         <button 
                             onClick={handleDownloadCSV}
-                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group"
+                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 transition-colors group"
                         >
-                            <span className="flex items-center gap-2"><FileText size={16} className="text-slate-400 group-hover:text-blue-500"/> Export CSV Logs</span>
+                            <span className="flex items-center gap-2"><FileText size={16} className="text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400"/> Export CSV Logs</span>
                             <Download size={14} className="text-slate-300" />
                         </button>
                         <button 
                             onClick={handleDownloadPDF}
-                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-sm text-slate-700 transition-colors group"
+                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 transition-colors group"
                         >
-                            <span className="flex items-center gap-2"><AlertCircle size={16} className="text-slate-400 group-hover:text-rose-500"/> Audit Report (PDF)</span>
+                            <span className="flex items-center gap-2"><AlertCircle size={16} className="text-slate-400 group-hover:text-rose-500 dark:group-hover:text-rose-400"/> Audit Report (PDF)</span>
                             <Download size={14} className="text-slate-300" />
                         </button>
                     </div>
