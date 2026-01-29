@@ -90,7 +90,7 @@ const UseCase: React.FC = () => {
                             <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={20} />
                             <div>
                                 <p className="font-bold text-slate-900 text-sm">Predictive Mitigation</p>
-                                <p className="text-xs text-slate-500 mt-1">Alerts triggered when AQI trends > 200.</p>
+                                <p className="text-xs text-slate-500 mt-1">Alerts triggered when AQI trends &gt; 200.</p>
                             </div>
                         </li>
                     </ul>
