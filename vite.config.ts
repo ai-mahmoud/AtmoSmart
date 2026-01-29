@@ -5,7 +5,8 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '');
+  // Using '.' instead of process.cwd() prevents TS errors regarding Process type definition
+  const env = loadEnv(mode, '.', '');
   
   // Prioritize process.env for system variables (like in Vercel)
   // Ensure we capture the key correctly from either source
@@ -22,7 +23,8 @@ export default defineConfig(({ mode }) => {
     base: './',
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './'),
+        // Use path.resolve('./') to point to project root, avoiding __dirname which is not available in ESM
+        '@': path.resolve('./'),
       },
     },
     define: {

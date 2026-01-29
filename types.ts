@@ -20,4 +20,29 @@ export interface DashboardWidget {
   color: string; // Hex code for chart
   unit: string;
   description?: string;
+  threshold?: number; // Regulatory limit
+  standard?: string; // e.g., "WHO", "EPA"
+}
+
+export interface Site {
+  id: string;
+  name: string;
+  location: string;
+  type: 'Industrial' | 'Corporate' | 'Logistics';
+  status: 'Online' | 'Maintenance' | 'Offline';
+}
+
+export interface Alert {
+  id: string;
+  severity: 'Critical' | 'Warning' | 'Info';
+  message: string;
+  timestamp: string;
+  metric: string;
+}
+
+export interface ComplianceLog {
+  id: string;
+  date: string;
+  status: 'Compliant' | 'Non-Compliant' | 'At Risk';
+  details: string;
 }
