@@ -6,17 +6,17 @@ const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Lead Solutions Architect',
-    image: 'https://ai-mahmoud.github.io/mahmoud.jpg'
+    image: 'https://ai-mahmoud.github.io/assets/mahmoud.jpg'
   },
   {
     name: 'Malak Mohamed El-Atfy',
     role: 'Embedded Systems Lead',
-    image: 'https://ai-mahmoud.github.io/malak.jpg'
+    image: 'https://ai-mahmoud.github.io/assets/malak.jpg'
   },
   {
     name: 'Mariam Ahmed Hany',
     role: 'Director of Operations',
-    image: 'https://ai-mahmoud.github.io/mariam.jpg'
+    image: 'https://ai-mahmoud.github.io/assets/mariam.jpg'
   }
 ];
 
