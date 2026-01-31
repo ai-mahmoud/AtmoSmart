@@ -20,13 +20,13 @@ const Footer: React.FC = () => {
         </p>
 
         <div className="flex space-x-6">
-          <a href="#" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <a href="https://github.com/ai-mahmoud" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="GitHub">
             <Github size={20} />
           </a>
-          <a href="#" className="text-gray-400 hover:text-blue-700 dark:hover:text-blue-400 transition-colors">
+          <a href="https://linkedin.com/in/mahmoud-elkholany" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-700 dark:hover:text-blue-400 transition-colors" aria-label="LinkedIn">
             <Linkedin size={20} />
           </a>
-          <a href="#" className="text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+          <a href="mailto:mahmoud.dev.ai@gmail.com" className="text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" aria-label="Email">
             <Mail size={20} />
           </a>
         </div>

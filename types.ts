@@ -4,6 +4,11 @@ export interface TeamMember {
   name: string;
   role: string;
   image: string;
+  socials?: {
+    github?: string;
+    linkedin?: string;
+    email?: string;
+  };
 }
 
 export interface TechItem {

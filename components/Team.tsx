@@ -6,7 +6,12 @@ const members: TeamMember[] = [
   {
     name: 'Mahmoud Hesham Elkholany',
     role: 'Lead Solutions Architect',
-    image: 'https://ai-mahmoud.github.io/assets/mahmoud.jpg'
+    image: 'https://ai-mahmoud.github.io/assets/mahmoud.jpg',
+    socials: {
+        github: 'https://github.com/ai-mahmoud',
+        linkedin: 'https://linkedin.com/in/mahmoud-elkholany',
+        email: 'mahmoud.dev.ai@gmail.com'
+    }
   },
   {
     name: 'Malak Mohamed El-Atfy',
@@ -40,9 +45,21 @@ const MemberCard: React.FC<{ member: TeamMember }> = ({ member }) => {
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/90 to-transparent p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
              <div className="flex justify-center gap-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                <Github size={18} className="hover:text-emerald-400 cursor-pointer" />
-                <Linkedin size={18} className="hover:text-emerald-400 cursor-pointer" />
-                <Mail size={18} className="hover:text-emerald-400 cursor-pointer" />
+                {member.socials?.github ? (
+                    <a href={member.socials.github} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors"><Github size={18} /></a>
+                ) : (
+                    <div className="opacity-50 cursor-not-allowed"><Github size={18} /></div>
+                )}
+                {member.socials?.linkedin ? (
+                    <a href={member.socials.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors"><Linkedin size={18} /></a>
+                ) : (
+                    <div className="opacity-50 cursor-not-allowed"><Linkedin size={18} /></div>
+                )}
+                {member.socials?.email ? (
+                    <a href={`mailto:${member.socials.email}`} className="hover:text-emerald-400 transition-colors"><Mail size={18} /></a>
+                ) : (
+                    <div className="opacity-50 cursor-not-allowed"><Mail size={18} /></div>
+                )}
              </div>
           </div>
        </div>
