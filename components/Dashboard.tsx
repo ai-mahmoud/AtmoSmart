@@ -115,7 +115,10 @@ const Dashboard: React.FC = () => {
   const aqiValue = getValue('AQI', 1, 'aqi');
   const tempValue = getValue('ENV', 1, 'temp');
   const humidityValue = getValue('ENV', 2, 'humidity');
-  const filterHealth = 100 - getValue('AQI', 2, 'filter'); // Invert load for "Health"
+  // Real hardware only reports a binary "Carbon Filter (0/1)" flag on field2, not a load
+  // percentage, so treating it as one via getValue() pinned this to ~99-100% on the live
+  // site and silently disabled the low-filtration alert. Simulate it on all sites instead.
+  const filterHealth = 100 - parseFloat(currentMock.filter);
   
   // Compliance Logic
   const getComplianceStatus = (val: number, limit: number) => {
